@@ -1,0 +1,30 @@
+<html>
+<head></head>
+<body>
+  <p> This is test strings and stucc</p>
+<script>
+const pTag = document.querySelector('p');
+pTag.addEventListener('mousedown', (event) => {
+  const mouseX = event.clientX;
+  const range = document.createRange();
+  range.setStart(pTag, 0);
+  range.setEnd(pTag, pTag.childNodes.length);
+  const rects = range.getClientRects();
+  let charPosition;
+  for (let i = 0; i < rects.length; i++) {
+    const rect = rects[i];
+    if (mouseX >= rect.left && mouseX <= rect.right) {
+      const offset = Math.round((mouseX - rect.left) / pTag.getBoundingClientRect().width * rect.width);
+      charPosition = range.startOffset + offset;
+      break;
+    }
+  }
+  if (charPosition !== undefined) {
+    const text = pTag.textContent;
+    const newText = text.slice(0, charPosition) + '_' + text.slice(charPosition);
+    pTag.textContent = newText;
+  }
+});
+</script>
+</body>
+</html>
