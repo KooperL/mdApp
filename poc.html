@@ -1,30 +1,106 @@
+<!DOCTYPE html>
 <html>
-<head></head>
-<body>
-  <p> This is test strings and stucc</p>
-<script>
-const pTag = document.querySelector('p');
-pTag.addEventListener('mousedown', (event) => {
-  const mouseX = event.clientX;
-  const range = document.createRange();
-  range.setStart(pTag, 0);
-  range.setEnd(pTag, pTag.childNodes.length);
-  const rects = range.getClientRects();
-  let charPosition;
-  for (let i = 0; i < rects.length; i++) {
-    const rect = rects[i];
-    if (mouseX >= rect.left && mouseX <= rect.right) {
-      const offset = Math.round((mouseX - rect.left) / pTag.getBoundingClientRect().width * rect.width);
-      charPosition = range.startOffset + offset;
-      break;
-    }
-  }
-  if (charPosition !== undefined) {
-    const text = pTag.textContent;
-    const newText = text.slice(0, charPosition) + '_' + text.slice(charPosition);
-    pTag.textContent = newText;
-  }
-});
-</script>
-</body>
+  <head>
+    <meta charset="UTF-8">
+    <title>Binary Search Example</title>
+    <script>
+      function hitCharBinSearch(mClientX, inmostHitEl) {
+        // Your function code goes here
+        // ...
+      }
+    </script>
+  </head>
+  <body>
+    <p id="my-paragraph">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis a turpis et mauris maximus vestibulum eu vel elit. Nam vehicula nibh vel urn, a posuere eros blandit.</p>
+
+    <p>
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis a turpis et mauris maximus vestibulum eu vel elit. Nam vehicula nibh vel urna interdum scelerisque. Nullam non neque sit amet mauris malesuada vestibulum a a orci. Praesent tincidunt justo non quam consectetur, non facilisis turpis varius. Donec porttitor arcu sed orci aliquet, a posuere eros blandit.
+    </p>
+    <script>
+      const tags = document.querySelectorAll('p');
+
+      tags.forEach(tag => {
+
+      tag.addEventListener("click", (event) => {
+        const mousePosition = {
+          x: event.clientX,
+          y: event.clientY
+        };
+        const clickedElement = event.target;
+
+        const charIndex = hitCharBinSearch(mousePosition.x, clickedElement);
+        const charIndexOther = binBoys(mousePosition, clickedElement);
+        console.log(`Clicked character index: ${charIndex}, ${charIndexOther}`);
+      });
+      })
+
+      function binBoys(cursorPos, target, charsOnRight = 0) {
+        let len = target.innerHTML.length
+        let splitInd = len / 2
+        
+        console.log(len, charsOnRight)
+        if (len === 0 || len === 1) return charsOnRight
+
+        let newNode = document.createElement('span')
+        let textNodeR = target.firstChild.splitText(splitInd)
+        let textNodeL = target.firstChild
+
+        let spanL = document.createElement('span')
+        spanL.appendChild(textNodeL)
+        spanL.style = 'background-color:cyan;'
+        let spanR = document.createElement('span')
+        spanR.style = 'background-color:yellow;'
+        spanR.appendChild(textNodeR)
+
+        newNode.appendChild(spanL)
+        newNode.appendChild(spanR)
+        
+        target.replaceWith(newNode);
+
+        const spanRBB = spanR.getBoundingClientRect()
+        if (cursorPos['x'] >= spanRBB.left) {
+          charsOnRight += spanL.firstChild.length
+          binBoys(cursorPos, spanR, charsOnRight)
+        } else {
+          binBoys(cursorPos, spanL, charsOnRight)
+        }
+      }
+
+function hitCharBinSearch(mClientX, target) {
+    const originalTarget = target
+    const bareText = target.firstChild.textContent
+    let textNode = target.firstChild
+    let textLenghtBeforeHit = 0
+    do {
+        let textNodeR = textNode.splitText(textNode.length / 2)
+        let textNodeL = textNode
+
+        let spanL = document.createElement('span')
+        spanL.appendChild(textNodeL)
+        spanL.style = 'background-color:blue;'
+        let spanR = document.createElement('span')
+        spanR.style = 'background-color:blue;'
+        spanR.appendChild(textNodeR)
+
+        target.appendChild(spanL)
+        target.appendChild(spanR)
+
+        const temp = spanR.getBoundingClientRect()
+        if (mClientX >= temp.left) {
+            textNode = textNodeR
+            target = spanR
+            textLenghtBeforeHit += textNodeL.length
+        }
+        else {
+            textNode = textNodeL
+            inmostHitEl = spanL
+        }
+    } while (textNode.length > 1)
+
+    originalTarget.innerHTML = bareText
+    return textLenghtBeforeHit
+}
+    </script>
+  </body>
 </html>
+
