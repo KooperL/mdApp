@@ -1,7 +1,5 @@
-import React, { useRef } from "solid-js";
-
 function App() {
-  const contentEditableRef = useRef(null);
+  let contentEditableRef: any;
 
   const handleBoldClick = () => {
     const selection = window.getSelection();
@@ -124,11 +122,12 @@ function App() {
         <button onClick={handleBlockCodeClick}>Code block</button>
         <button onClick={handleAddTableClick}>Blank table</button>
       </div>
-      <div contentEditable ref={contentEditableRef} style={{
-      border: '1px solid black',
-      minHeight: '100px',
-      padding: '10px'
-    }}></div>
+      <div contentEditable ref={contentEditableRef} style={`
+      border: '1px solid black';
+      minHeight: '100px';
+      padding: '10px';
+`}
+    ></div>
     </div>;
 }
 
