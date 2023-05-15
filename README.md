@@ -1,4 +1,8 @@
 ## TODO
+- [] Build screen
+- [] Remove `execCommand`
+- [] Undo/redo
+- [] Connect ref with toolbar props
 - [] Build toolbar for rich text
   - [] Icons
   - [] Toggle
