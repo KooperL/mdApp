@@ -4,4 +4,4 @@ function editor() {
   return { contentEditableRef }
 }
 
-export default editor 
+export default editor

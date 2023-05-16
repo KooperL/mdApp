@@ -5,10 +5,16 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "pretty": "prettier --write \"./**/*.{js,jsx,json,ts,tsx}\"",
+    "test": "jest",
     "serve": "vite preview"
   },
   "license": "MIT",
   "devDependencies": {
+    "jest": "^29.5.0",
+    "jest-environment-jsdom": "^29.5.0",
+    "prettier": "^2.8.8",
+    "solid-jest": "^0.2.0",
     "typescript": "^4.9.5",
     "vite": "^4.1.1",
     "vite-plugin-solid": "^2.5.0"
