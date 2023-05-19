@@ -27,6 +27,7 @@ function toolbarController(props: importProps): exportProps {
     handleIncreaseFontSizeClick,
     handleInsertOrderedListClick,
     handleInsertUnorderedListClick,
+    contentEditableRef
   }
 }
 

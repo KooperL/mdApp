@@ -48,11 +48,11 @@ export default function enhance(props: enhanceProps) {
     handleIncreaseFontSizeClick,
     handleInsertOrderedListClick,
     handleInsertUnorderedListClick,
-    ContentEditableRef,
+    contentEditableRef,
   } = ToolbarController(props)
   return (
     <Toolbar
-      ContentEditableRef={ContentEditableRef}
+      ContentEditableRef={contentEditableRef}
       handleBoldClick={handleBoldClick}
       handleIndentClick={handleIndentClick}
       handleOutdentClick={handleOutdentClick}
