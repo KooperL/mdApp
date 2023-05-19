@@ -10,4 +10,5 @@ export interface Props {
   handleIncreaseFontSizeClick: () => void
   handleInsertOrderedListClick: () => void
   handleInsertUnorderedListClick: () => void
+  contentEditableRef: any
 }

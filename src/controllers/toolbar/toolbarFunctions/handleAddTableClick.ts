@@ -1,10 +1,12 @@
 export function handleAddTableClick () {
   const table = document.createElement("table")
   const tbody = document.createElement("tbody")
+  const rows = 2
+  const cols = 2
 
-  for (let i = 0; i < 2; i++) {
+  for (let i = 0; i < rows; i++) {
     const row = document.createElement("tr")
-    for (let j = 0; j < 2; j++) {
+    for (let j = 0; j < cols; j++) {
       const cell = document.createElement("td")
       cell.textContent = "Cell"
       row.appendChild(cell)
