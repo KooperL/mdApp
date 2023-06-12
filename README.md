@@ -1,20 +1,14 @@
-## TODO
-- [x] Build screen
-- [] Remove `execCommand`, oof
-- [] Add rich text features
-  - [] Undo/redo
-  - [] Checkbox
-  - []  
-- [] Connect ref with toolbar props
-- [] Build UI toolbar for rich text
-  - [] Icons
-  - [] Toggle
-  - [] Destination text field for hyperlink
-  - [] Add table row/column selector
-- [] Build content editable area with boarder
-- [] Export as `.docx` or `.md`
-- [] Cloud document storage
-- [] Website builder
+# Frontend
+ - Leveraging HTML's contenteditable textarea to have native keyboard shortcuts for simple tasks (undo, ctrl + <arrow keys>)
+ - Will post async callback to listener and update textarea with response XML
 
-Tests:
+# Backend
+- Function here will receive string, command and range
+- String will be tokenized and then serialized into a vec of structs
+- Meta tags/tokens will be removed here so range can index vec directly
+- Vec will be deserialized into tree/string (challenges here)
+- Function will return string of XML
 
+# Integration
+ - Tauri
+ - WASM
