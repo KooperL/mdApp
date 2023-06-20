@@ -5,9 +5,9 @@ import "./App.css";
 function App() {
   const [str, setStr] = createSignal("");
 
-  async function process() {
+  async function updateStyling() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setStr(await invoke("process_arg", { name: str() }));
+    setStr(await invoke("process_styling", { name: str() }));
   }
 
   return (
@@ -17,7 +17,7 @@ function App() {
         class="row"
         onSubmit={async (e) => {
           e.preventDefault();
-          await process();
+          await updateStyling();
           if (!document.querySelector('#greet-input')) throw new Error()
           document.querySelector('#greet-input')!.innerHTML = str.toString()
         }}

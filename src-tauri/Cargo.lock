@@ -3031,6 +3031,7 @@ dependencies = [
  "tendril",
  "xi-core-lib",
  "xml5ever",
+ "xmlparser",
 ]
 
 [[package]]
@@ -4102,3 +4103,9 @@ dependencies = [
  "mac",
  "markup5ever 0.11.0",
 ]
+
+[[package]]
+name = "xmlparser"
+version = "0.13.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4d25c75bf9ea12c4040a97f829154768bbbce366287e2dc044af160cd79a13fd"
