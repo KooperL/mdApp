@@ -18,12 +18,12 @@ function App() {
         onSubmit={async (e) => {
           e.preventDefault();
           await updateStyling();
-          if (!document.querySelector('#greet-input')) throw new Error()
-          document.querySelector('#greet-input')!.innerHTML = str.toString()
+          if (!document.querySelector('#wysiwyg')) throw new Error()
+          document.querySelector('#wysiwyg')!.innerHTML = str.toString()
         }}
       >
         <textarea contenteditable={true}
-          id="greet-input"
+          id="wysiwyg"
           onChange={(e) => setStr(e.currentTarget.value)}
           placeholder="Text"
           />
