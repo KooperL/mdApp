@@ -15,15 +15,14 @@ struct StyledCharacter {
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
-fn process_styling(name: &str) -> String {
-    let test_string = "<tagname name='value'/>";
+fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -> String {
     let mut struct_collection: Vec<StyledCharacter> = Vec::new(); 
 
     let mut is_bold = false;
     let mut is_emphasized = false;
     let mut is_heading = false;
 
-    let tokenizer = xmlparser::Tokenizer::from(name);
+    let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
         let token_val = token.expect("Token to be valid");
             match token_val {
@@ -33,13 +32,26 @@ fn process_styling(name: &str) -> String {
                         is_emphasized,
                         is_heading,
                         character: String::from(val.as_str())
-                });
-            },
+                    });
+                },
                 xmlparser::Token::ElementStart {prefix: _, local, span} => {
+                println!("token: {}", local.as_str());
                 match local.as_str() {
                     "b" => {
                         is_bold = true;
                     },
+                    "i" => {
+                        is_bold = true;
+                        is_emphasized = true;
+                    },
+                    "h1" => {
+                        is_bold = false;
+                        is_emphasized = false;
+                        is_heading = true;
+                    },
+                    _ => {
+                        // others tags here
+                    }
                 }
             },
                 _ => {},
@@ -48,7 +60,23 @@ fn process_styling(name: &str) -> String {
         println!("{:?}", token);
     }
 
-    // apply transformations
+    // apply transformations with start/end
+    for i in begin..end {
+        match transformation {
+            "b" => {
+                struct_collection[i].is_bold = true;
+            },
+            "i" => {
+                struct_collection[i].is_emphasized = true;
+            },
+            "h1" => {
+                struct_collection[i].is_bold = false;
+                struct_collection[i].is_emphasized = false;
+                struct_collection[i].is_heading = true;
+            },
+            _ => {},
+        }
+    }
 
     is_bold = false;
     is_emphasized = false;

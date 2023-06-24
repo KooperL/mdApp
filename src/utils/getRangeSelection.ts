@@ -1,50 +1,46 @@
-export default {}
+import { invoke } from "@tauri-apps/api/tauri";
 
-interface SelectionInformation {
-  range: Selection
-  nodeCollection: Node[]
-} 
-
-function getRangeSelection(content_id: string): null | SelectionInformation {
+async function updateSelection(content_id: string, action: string) {
+  
   const selection: Selection | null = window.getSelection();
   if (!selection) return null
-  const anchor = selection.anchorNode
+  const anchor = selection.anchorNode?.parentNode // Must be p tag, deeply nested styles could destory existing logic
   const anchorOffset = selection.anchorOffset
-  const focus = selection.focusNode
+  const focus = selection.focusNode?.parentNode
   const focusOffset = selection.focusOffset
 
   // right to left vs left to right???
 
   const wysiwyg = document.getElementById(content_id)
   // Must be p, must contain both nodes: validation acativity
+  // parentNode.parentNode
 
   if (!wysiwyg) return null
 
-  let isInsideSelection = false
-  let nodeCollection: Node[] = new Array() 
-  wysiwyg.childNodes.forEach((element, elementIndex) => {
+  let isRelevant = false
+  const children = wysiwyg.children
+  let iterator = 0
+  let shouldIterate = true
+  while (shouldIterate) {
+    const element = children[iterator]
     if (element === anchor) {
-      let isInsideSelection = true 
+      let isRelevant = true 
     }
-    if (isInsideSelection === true) nodeCollection.push(element)
+
+    if (isRelevant) {
+      // action
+      const newHTML: string = await invoke("process_styling", { html: element.innerHTML, begin: anchorOffset, end: focusOffset, transformation: action })
+      element.innerHTML = newHTML
+    }
+
     if (element === focus) {
-      let isInsideSelection = false 
+      shouldIterate = false
+      isRelevant = false
     }
-  });
-
-  const returnVal: SelectionInformation = {
-    nodeCollection,
-    range: selection
+    iterator ++
   }
-  return returnVal 
-}
 
-function updateSelection(selection: SelectionInformation) {
-  const rangeAnchor = selection.range.getRangeAt(0)
-  rangeAnchor.deleteContents()
-  for (let i = 0; i < selection.nodeCollection.length; i++) {
-    rangeAnchor.insertNode(selection.nodeCollection[i])
-  } 
+
 }
 
 // user highlights
@@ -55,6 +51,5 @@ function updateSelection(selection: SelectionInformation) {
 // updateSelection is called
 
 export {
-  getRangeSelection,
-  updateSelection
+  updateSelection,
 }

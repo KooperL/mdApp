@@ -1,13 +1,13 @@
 import { createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
+import { updateSelection } from "./utils/getRangeSelection";
 
 function App() {
   const [str, setStr] = createSignal("");
 
   async function updateStyling() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-    setStr(await invoke("process_styling", { name: str() }));
   }
 
   return (
@@ -17,17 +17,18 @@ function App() {
         class="row"
         onSubmit={async (e) => {
           e.preventDefault();
-          await updateStyling();
           if (!document.querySelector('#wysiwyg')) throw new Error()
-          document.querySelector('#wysiwyg')!.innerHTML = str.toString()
         }}
       >
-        <textarea contenteditable={true}
+        <div class="toolbar">
+          <button onclick={() => {
+            updateSelection("wysiwyg", "bold")
+          }}
+        >Bold</button>
+        </div>
+        <div contenteditable={true}
           id="wysiwyg"
-          onChange={(e) => setStr(e.currentTarget.value)}
-          placeholder="Text"
-          />
-        <button type="submit">process text</button>
+        />
       </form>
     </div>
   );
