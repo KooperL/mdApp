@@ -26,9 +26,42 @@ function App() {
           }}
         >Bold</button>
         </div>
-        <div contenteditable={true}
+        <div
           id="wysiwyg"
-        />
+          contenteditable={true}
+          onKeyDown={function(event) {
+  var contentDiv = event.target;
+  var content = contentDiv.innerHTML;
+  var newContent = "";
+
+  if (content === "") {
+    // Case a): No content in the editor
+    contentDiv.innerHTML = "";
+    return;
+  }
+
+  var paragraphs = content.split("<br>");
+  paragraphs.forEach(function(paragraph) {
+    if (paragraph.startsWith("<h") || paragraph.startsWith("</h")) {
+      // Exclude header tags
+      newContent += paragraph;
+    } else {
+      // Convert other content into paragraphs
+      newContent += "<p>" + paragraph + "</p>";
+    }
+    newContent += "<br>";
+  });
+
+  // Remove the extra line break at the end
+  newContent = newContent.slice(0, -4);
+
+  // Update the content with modified paragraphs
+  contentDiv.innerHTML = newContent;
+}}
+        >
+          <p 
+          ></p>
+        </div>
       </form>
     </div>
   );
