@@ -3,6 +3,37 @@ import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 import { updateSelection } from "./utils/getRangeSelection";
 
+function test(event: KeyboardEvent) {
+  if (!event) return
+  let editableDiv = document.getElementById('wysiwyg') //event.target
+  if (!editableDiv) return
+  var keyCode = event.keyCode || event.which;
+  if (keyCode === 13) {
+    event.preventDefault();
+    // @ts-ignore
+    var paragraphs: HTMLCollectionOf<HTMLParagraphElement> = editableDiv.getElementsByTagName("p");
+    var lastParagraph = paragraphs[paragraphs.length - 1];
+
+    // @ts-ignore
+    if (lastParagraph && lastParagraph.textContent.trim() === "") {
+      lastParagraph.remove();
+    }
+
+    var newParagraph = document.createElement("p");
+    // @ts-ignore
+    newParagraph.contenteditable = true;
+    newParagraph.onkeypress = test
+    editableDiv.appendChild(newParagraph);
+    newParagraph.focus()
+  } else if (keyCode === 8) {
+    // @ts-ignore
+    if (event.target.innerHTML === "") {
+      console.log('empty')
+    } 
+  }
+}
+
+
 function App() {
   const [str, setStr] = createSignal("");
 
@@ -28,38 +59,12 @@ function App() {
         </div>
         <div
           id="wysiwyg"
-          contenteditable={true}
-          onKeyDown={function(event) {
-  var contentDiv = event.target;
-  var content = contentDiv.innerHTML;
-  var newContent = "";
-
-  if (content === "") {
-    // Case a): No content in the editor
-    contentDiv.innerHTML = "";
-    return;
-  }
-
-  var paragraphs = content.split("<br>");
-  paragraphs.forEach(function(paragraph) {
-    if (paragraph.startsWith("<h") || paragraph.startsWith("</h")) {
-      // Exclude header tags
-      newContent += paragraph;
-    } else {
-      // Convert other content into paragraphs
-      newContent += "<p>" + paragraph + "</p>";
-    }
-    newContent += "<br>";
-  });
-
-  // Remove the extra line break at the end
-  newContent = newContent.slice(0, -4);
-
-  // Update the content with modified paragraphs
-  contentDiv.innerHTML = newContent;
-}}
+          onKeyDown={test}
+            contenteditable={true}
         >
           <p 
+            contenteditable={true}
+          onKeyDown={test}
           ></p>
         </div>
       </form>
