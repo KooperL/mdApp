@@ -5,7 +5,7 @@ use std::string::String;
 use std::fmt::Write;
 use xmlparser;
 
-
+#[derive(Debug)]
 struct StyledCharacter {
     is_bold: bool,
     is_emphasized: bool,
@@ -27,12 +27,15 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         let token_val = token.expect("Token to be valid");
             match token_val {
                 xmlparser::Token::Text {text: val} => {
-                    struct_collection.push(StyledCharacter {
-                        is_bold,
-                        is_emphasized,
-                        is_heading,
-                        character: String::from(val.as_str())
-                    });
+                    // Text is a string, not char
+                    for character in val.chars() {
+                        struct_collection.push(StyledCharacter {
+                            is_bold,
+                            is_emphasized,
+                            is_heading,
+                            character: String::from(character)
+                        });
+                    }
                 },
                 xmlparser::Token::ElementStart {prefix: _, local, span} => {
                 println!("token: {}", local.as_str());
@@ -56,20 +59,23 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             },
                 _ => {},
             };
-        
-        println!("{:?}", token);
+        // println!("{:?}", token);
     }
 
+    println!("{:?}", struct_collection);
     // apply transformations with start/end
+    println!("{:?}, {:?}", begin, end);
     for i in begin..end {
+        // end could be bigger than vec collection
         match transformation {
-            "b" => {
+            "bold" => {
                 struct_collection[i].is_bold = true;
+                println!("making somethingbold");
             },
-            "i" => {
+            "emphasize" => {
                 struct_collection[i].is_emphasized = true;
             },
-            "h1" => {
+            "heading" => {
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasized = false;
                 struct_collection[i].is_heading = true;
@@ -77,12 +83,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             _ => {},
         }
     }
+    println!("{:?}", struct_collection);
 
     is_bold = false;
     is_emphasized = false;
     is_heading = false;
     
     let mut builder = String::new();
+    write!(&mut builder, "<p>").unwrap();
     for char in struct_collection {
         if !is_bold && char.is_bold {
             write!(&mut builder, "<b>").unwrap();
@@ -110,6 +118,19 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         }
         write!(&mut builder, "{}", char.character).unwrap();
     }
+    // close open tags
+    if is_bold {
+        write!(&mut builder, "</b>").unwrap();
+    }
+    if is_emphasized {
+        write!(&mut builder, "</em>").unwrap();
+    }
+    if is_heading {
+        write!(&mut builder, "</h1>").unwrap();
+    }
+    
+    
+    write!(&mut builder, "</p>").unwrap();
 
 
     builder

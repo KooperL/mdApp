@@ -21,13 +21,14 @@ function test(event: KeyboardEvent) {
 
     var newParagraph = document.createElement("p");
     // @ts-ignore
-    newParagraph.contenteditable = true;
+    newParagraph.contentEditable = true;
     newParagraph.onkeypress = test
+    // newParagraph.setAttribute('style', 'margin: 0; height: fit-content;')
     editableDiv.appendChild(newParagraph);
     newParagraph.focus()
   } else if (keyCode === 8) {
     // @ts-ignore
-    if (event.target.innerHTML === "") {
+    if (event.target.innerText === "") {
       console.log('empty')
     } 
   }
@@ -40,6 +41,20 @@ function App() {
   async function updateStyling() {
     // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
   }
+
+  // Get the first div element and set the focus
+  /**var firstDiv = document.querySelector('div');
+firstDiv.focus();
+
+// Add event listener to disable contenteditable on selectstart
+var divElements = document.querySelectorAll('div');
+divElements.forEach(function(div) {
+  div.addEventListener('selectstart', function() {
+    div.setAttribute('contenteditable', 'false');
+  });
+});
+**/
+
 
   return (
     <div class="container">
@@ -59,13 +74,12 @@ function App() {
         </div>
         <div
           id="wysiwyg"
-          onKeyDown={test}
             contenteditable={true}
         >
           <p 
             contenteditable={true}
-          onKeyDown={test}
-          ></p>
+            onKeyDown={test}
+          >‎</p>
         </div>
       </form>
     </div>
