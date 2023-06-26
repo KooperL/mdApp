@@ -4,6 +4,11 @@
   background-color: #fefefe;
 }
 
+#wysiwyg > p {
+  margin: 0;
+  height: fit-content;
+}
+
 form {
   height: 100%;
   width: 100%;
@@ -32,3 +37,5 @@ body {
   width: 100vw;
   overscroll-behavior: 0;
 }
+
+
