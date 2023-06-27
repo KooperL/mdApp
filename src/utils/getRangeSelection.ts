@@ -1,8 +1,7 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
 
-
-function getSelectionCharacterOffsetWithin(element) {
+function getSelectionCharacterOffsetWithin(element: HTMLElement) {
     var start = 0;
     var end = 0;
     var doc = element.ownerDocument || element.document;
@@ -32,71 +31,70 @@ function getSelectionCharacterOffsetWithin(element) {
 }
 
 async function updateSelection(content_id: string, action: string) {
-  console.log('called')
+  const wysiwyg = document.getElementById(content_id)
   const selection: Selection | null = window.getSelection();
   if (!selection) return null
-  // const anchor = selection.anchorNode?.parentNode // Must be p tag, deeply nested styles could destory existing logic
-  // focusOffset
-  // const focus = selection.focusNode?.parentNode
-  // anchorOffset
 
-  const {start, end} = getSelectionCharacterOffsetWithin( document.getElementById(content_id) );
-  // right to left vs left to right???
-
-  const wysiwyg = document.getElementById(content_id)
-  // Must be p, must contain both nodes: validation acativity
+  const {start, end} = getSelectionCharacterOffsetWithin(wysiwyg as HTMLElement);
+  // TODO: right to left vs left to right???
 
   if (!wysiwyg) return null
 
-  console.log('begin loop')
   let isRelevant = false
-  const children = wysiwyg.children
+  const { children } = wysiwyg
   let iterator = 0
   let shouldIterate = true
   let rollingTicker = 0
+
+  console.log('begin loop')
   while (shouldIterate) {
-    const element = children[iterator]
-    console.log(element, children)
+    const element = children[iterator] ?? null
+    let contentLength = element?.textContent?.length ?? 0
 
-    // if (element.isSameNode(anchor)) {
-    if (start > rollingTicker) {
-      console.log('same node found')
-      isRelevant = true 
-    }
+    let textBegin = rollingTicker 
+    rollingTicker += contentLength
+    let textEnd = rollingTicker
 
-    console.log('loop')
-    if (isRelevant) {
-      console.log('loop is relevant')
-      // console.log({ html: element.outerHTML, begin: anchorOffset, end: focusOffset, transformation: action })
-      // const newHTML: string = await invoke("process_styling", { html: element.outerHTML, begin: anchorOffset, end: focusOffset, transformation: action })
+    let startCaretIsInThisElement = (
+      start >= textBegin &&
+      start < textEnd
+    )
+
+    let endCaretIsInThisElement = (
+      end >= textBegin &&
+      end <= textEnd
+    )
+    console.log(`Loop iterate: ${element}, ${rollingTicker} ${start} ${end} ${startCaretIsInThisElement}, ${endCaretIsInThisElement}, ${isRelevant}`)
+
+
+    if (startCaretIsInThisElement || isRelevant) {
+      isRelevant = true
+      console.log(
+        'Is updating HTML',
+        element.outerHTML,
+        contentLength,
+        element.textContent,
+        element.textContent?.length,
+        start,
+        end,
+        rollingTicker
+    )
+      const newHTML: string = await invoke("process_styling", { html: element.outerHTML, begin: rollingTicker - start, end: rollingTicker - end, transformation: action })
       
-      console.log(element.outerHTML, element.outerHTML.length, element.textContent, element.textContent.length, start, end, rollingTicker)
-      // const newHTML: string = await invoke("process_styling", { html: element.outerHTML, begin: start - rollingTicker, end: end - rollingTicker, transformation: action })
-      
-      // console.log(newHTML)
-      // element.outerHTML = newHTML
+      console.log(newHTML)
+      element.outerHTML = newHTML
     }
 
-    console.log(rollingTicker, end)
-    // if (element.isSameNode(focus)) {
-    rollingTicker += element.textContent?.length ?? 0
-    if (end <= rollingTicker) {
-      shouldIterate = false
-      isRelevant = false
+    if (endCaretIsInThisElement || !element) {
+      shouldIterate = false 
+      isRelevant = false 
     }
+
+    console.log(`Loop iterate finished: is relevant? ${isRelevant}, is iterating: ${shouldIterate}`)
     iterator ++
   }
-
-  // Nah man, rollingVal is increased at start. if start caret is before rollingVal - node len and rollingVal, apply. if end caret is after rolling val, iterate
-
+  console.log('Loop finished')
 }
-
-// user highlights
-// user presses button
-// handler function fires, b (example) passed as arg
-// getRangeSelection is called, rawHTML and range indexes of text are returned
-// Passed to web worker
-// updateSelection is called
 
 export {
   updateSelection,

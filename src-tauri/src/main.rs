@@ -90,7 +90,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     is_heading = false;
     
     let mut builder = String::new();
-    write!(&mut builder, "<p>").unwrap();
+    write!(&mut builder, "<p contenteditable=\"true\" onKeyDown=\"keyPresshandler\">").unwrap();
     for char in struct_collection {
         if !is_bold && char.is_bold {
             write!(&mut builder, "<b>").unwrap();
@@ -128,10 +128,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     if is_heading {
         write!(&mut builder, "</h1>").unwrap();
     }
-    
-    
     write!(&mut builder, "</p>").unwrap();
-
 
     builder
 }

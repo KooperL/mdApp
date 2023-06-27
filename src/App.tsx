@@ -3,33 +3,34 @@ import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 import { updateSelection } from "./utils/getRangeSelection";
 
-function test(event: KeyboardEvent) {
-  if (!event) return
+function keyPresshandler(event: KeyboardEvent) {
+  if (!event || !event?.target) return
   let editableDiv = document.getElementById('wysiwyg') //event.target
   if (!editableDiv) return
   var keyCode = event.keyCode || event.which;
   if (keyCode === 13) {
     event.preventDefault();
-    // @ts-ignore
     var paragraphs: HTMLCollectionOf<HTMLParagraphElement> = editableDiv.getElementsByTagName("p");
     var lastParagraph = paragraphs[paragraphs.length - 1];
 
-    // @ts-ignore
-    if (lastParagraph && lastParagraph.textContent.trim() === "") {
+    if (lastParagraph && (lastParagraph?.textContent ?? '').trim() === "") {
       lastParagraph.remove();
     }
+    
+    // TODO could be inserted in middle
 
-    var newParagraph = document.createElement("p");
-    // @ts-ignore
-    newParagraph.contentEditable = true;
-    newParagraph.onkeypress = test
+    let newParagraph = document.createElement("p");
+    newParagraph.contentEditable = 'true';
+    newParagraph.onkeypress = keyPresshandler
     // newParagraph.setAttribute('style', 'margin: 0; height: fit-content;')
     editableDiv.appendChild(newParagraph);
     newParagraph.focus()
   } else if (keyCode === 8) {
     // @ts-ignore
     if (event.target.innerText === "") {
-      console.log('empty')
+      // get all items in selection and remove from document
+      console.log('empty, TODO remve')
+      //editableDiv.removeChild(event.)
     } 
   }
 }
@@ -37,24 +38,6 @@ function test(event: KeyboardEvent) {
 
 function App() {
   const [str, setStr] = createSignal("");
-
-  async function updateStyling() {
-    // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
-  }
-
-  // Get the first div element and set the focus
-  /**var firstDiv = document.querySelector('div');
-firstDiv.focus();
-
-// Add event listener to disable contenteditable on selectstart
-var divElements = document.querySelectorAll('div');
-divElements.forEach(function(div) {
-  div.addEventListener('selectstart', function() {
-    div.setAttribute('contenteditable', 'false');
-  });
-});
-**/
-
 
   return (
     <div class="container">
@@ -78,7 +61,7 @@ divElements.forEach(function(div) {
         >
           <p 
             contenteditable={true}
-            onKeyDown={test}
+            onKeyDown={keyPresshandler}
           >‎</p>
         </div>
       </form>
