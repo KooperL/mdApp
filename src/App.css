@@ -1,7 +1,18 @@
-#wysiwyg {
+#content-container {
   height: 100%;
   width: 100%;
+  background-color: #d2d2d2;
+  display: flex;
+  justify-content: center;
+}
+
+#wysiwyg {
+  height: 100%;
+  width: 60%;
   background-color: #fefefe;
+  outline: none;
+  padding: 1rem;
+  /**all: unset;**/
 }
 
 #wysiwyg > p {
@@ -22,20 +33,7 @@ form {
   width: 100%;
 }
 
-.container {
-  height: 100%;
-  width: 100%;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-}
 
 
-body {
-  height: 100vh;
-  margin: 0;
-  width: 100vw;
-  overscroll-behavior: 0;
-}
 
 
