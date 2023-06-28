@@ -18,7 +18,9 @@ function getSelectionCharacterOffsetWithin(element: HTMLElement) {
             preCaretRange.setEnd(range.endContainer, range.endOffset);
             end = preCaretRange.toString().length;
         }
-    } else if ( (sel = doc.selection) && sel.type != "Control") {
+    } else if (
+      (sel = doc.selection) && sel.type != "Control")
+    {
         var textRange = sel.createRange();
         var preCaretTextRange = doc.body.createTextRange();
         preCaretTextRange.moveToElementText(element);
@@ -38,7 +40,7 @@ async function updateSelection(content_id: string, action: string) {
   const {start, end} = getSelectionCharacterOffsetWithin(wysiwyg as HTMLElement);
   // TODO: right to left vs left to right???
 
-  if (!wysiwyg) return null
+  if (!wysiwyg) return
 
   let isRelevant = false
   const { children } = wysiwyg
@@ -46,9 +48,9 @@ async function updateSelection(content_id: string, action: string) {
   let shouldIterate = true
   let rollingTicker = 0
 
-  console.log('begin loop')
   while (shouldIterate) {
     const element = children[iterator] ?? null
+    if (!element) return
     let contentLength = element?.textContent?.length ?? 0
 
     let textBegin = rollingTicker 
@@ -64,36 +66,30 @@ async function updateSelection(content_id: string, action: string) {
       end >= textBegin &&
       end <= textEnd
     )
-    console.log(`Loop iterate: ${element}, ${rollingTicker} ${start} ${end} ${startCaretIsInThisElement}, ${endCaretIsInThisElement}, ${isRelevant}`)
-
-
+    
     if (startCaretIsInThisElement || isRelevant) {
       isRelevant = true
-      console.log(
-        'Is updating HTML',
-        element.outerHTML,
-        contentLength,
-        element.textContent,
-        element.textContent?.length,
-        start,
-        end,
-        rollingTicker
-    )
-      const newHTML: string = await invoke("process_styling", { html: element.outerHTML, begin: rollingTicker - start, end: rollingTicker - end, transformation: action })
+      const args = {
+        html: element.outerHTML,
+        begin: Math.max(0, start - rollingTicker + contentLength),
+        end: Math.max(Math.min(end - rollingTicker + contentLength, contentLength), 0),
+        transformation: action
+      }
+      console.log(args)
+      const newHTML: string = await invoke("process_styling", args)
       
       console.log(newHTML)
       element.outerHTML = newHTML
     }
 
-    if (endCaretIsInThisElement || !element) {
+    if (endCaretIsInThisElement) {
       shouldIterate = false 
       isRelevant = false 
     }
 
-    console.log(`Loop iterate finished: is relevant? ${isRelevant}, is iterating: ${shouldIterate}`)
     iterator ++
   }
-  console.log('Loop finished')
+  selection.removeAllRanges()
 }
 
 export {

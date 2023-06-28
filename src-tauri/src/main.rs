@@ -16,11 +16,14 @@ struct StyledCharacter {
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -> String {
+    println!("Args: {:?}, {:?}, {:?}", html, begin, end);
     let mut struct_collection: Vec<StyledCharacter> = Vec::new(); 
 
     let mut is_bold = false;
     let mut is_emphasized = false;
     let mut is_heading = false;
+
+    let mut whole_area_is_bold_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -28,7 +31,12 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             match token_val {
                 xmlparser::Token::Text {text: val} => {
                     // Text is a string, not char
-                    for character in val.chars() {
+                    for (index, character) in val.chars().enumerate() {
+                        if index >= begin && index <= end {
+                            if !is_bold {
+                                whole_area_is_bold_formatted = false;
+                            };
+                        };
                         struct_collection.push(StyledCharacter {
                             is_bold,
                             is_emphasized,
@@ -38,39 +46,57 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     }
                 },
                 xmlparser::Token::ElementStart {prefix: _, local, span} => {
-                println!("token: {}", local.as_str());
-                match local.as_str() {
-                    "b" => {
-                        is_bold = true;
-                    },
-                    "i" => {
-                        is_bold = true;
-                        is_emphasized = true;
-                    },
-                    "h1" => {
-                        is_bold = false;
-                        is_emphasized = false;
-                        is_heading = true;
-                    },
-                    _ => {
-                        // others tags here
+                    match local.as_str() {
+                        "b" => {
+                            is_bold = true;
+                        },
+                        "i" => {
+                            is_emphasized = true;
+                        },
+                        "h1" => {
+                            is_bold = false;
+                            is_emphasized = false;
+                            is_heading = true;
+                        },
+                        _ => {
+                            // Others tags here
+                        }
                     }
-                }
-            },
+                },
+                xmlparser::Token::ElementEnd {span, end} => {
+                    match span.as_str() {
+                        "</b>" => {
+                            is_bold = false;
+                        },
+                        "</i>" => {
+                            is_emphasized = false;
+                        },
+                        "</h1>" => {
+                            is_bold = false;
+                            is_emphasized = false;
+                            is_heading = false;
+                        },
+                        _ => {
+                            // Others tags here
+                        }
+                    }
+                },
                 _ => {},
             };
         // println!("{:?}", token);
     }
 
-    println!("{:?}", struct_collection);
-    // apply transformations with start/end
-    println!("{:?}, {:?}", begin, end);
+    // println!("{:?}", struct_collection);
+    // Apply transformations with start/end
     for i in begin..end {
-        // end could be bigger than vec collection
+        // End could be bigger than vec collection, bad index
         match transformation {
             "bold" => {
-                struct_collection[i].is_bold = true;
-                println!("making somethingbold");
+                if i >= begin && i <= end {
+                    struct_collection[i].is_bold = !whole_area_is_bold_formatted;
+                } else {
+                    struct_collection[i].is_bold = true;
+                }
             },
             "emphasize" => {
                 struct_collection[i].is_emphasized = true;
@@ -90,7 +116,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     is_heading = false;
     
     let mut builder = String::new();
-    write!(&mut builder, "<p contenteditable=\"true\" onKeyDown=\"keyPresshandler\">").unwrap();
+    write!(&mut builder, "<p contenteditable=\"true\" onKeyDown=\"keyPresshandler\" >").unwrap();
     for char in struct_collection {
         if !is_bold && char.is_bold {
             write!(&mut builder, "<b>").unwrap();
@@ -118,7 +144,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         }
         write!(&mut builder, "{}", char.character).unwrap();
     }
-    // close open tags
+    // Close open tags
     if is_bold {
         write!(&mut builder, "</b>").unwrap();
     }
@@ -130,7 +156,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     }
     write!(&mut builder, "</p>").unwrap();
 
-    builder
+    return builder;
 }
 
 fn main() {
