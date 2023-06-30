@@ -24,9 +24,10 @@ function keyPresshandler(event: KeyboardEvent) {
     // newParagraph.setAttribute('style', 'margin: 0; height: fit-content;')
     editableDiv.appendChild(newParagraph);
     newParagraph.focus()
+
   } else if (keyCode === 8) {
     // Backspace 
-    // @ts-ignore
+    // @ts-ignore, simply wrong
     if (event.target.innerText === "") {
       // get all items in selection and remove from document
       console.log('empty, TODO remve') // See getAllChildrenInSelection

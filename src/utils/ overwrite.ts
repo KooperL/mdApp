@@ -6,5 +6,4 @@ function formatElement (element: string, tagName: string) {
 }
 
 export {
-  formatElement
 }
