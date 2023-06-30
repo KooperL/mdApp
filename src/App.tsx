@@ -12,7 +12,6 @@ function App() {
 
   return (
     <div class="container">
-      <h1>mdApp</h1>
       <form
         class="row"
         onSubmit={async (e) => {
@@ -24,7 +23,15 @@ function App() {
           <button onclick={() => {
             updateSelection(contentID, "bold")
           }}
-        >Bold</button>
+        >
+          <b>Bold</b>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "emphasise")
+          }}
+        >
+          <i>Italics</i>
+        </button>
         </div>
         <div id="content-container">
           <div
@@ -34,12 +41,14 @@ function App() {
             <p 
               contenteditable={true}
               onKeyDown={keyPresshandler}
-            >‎</p>
+            >&#8203;</p>
           </div>
         </div>
       </form>
     </div>
   );
 }
+
+// Spaces: \u{3164} \u{200b}
 
 export default App;

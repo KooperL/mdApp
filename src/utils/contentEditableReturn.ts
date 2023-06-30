@@ -72,6 +72,4 @@ function contentEditableReturn(event: any) {
 };
 
 export {
-  contentEditableReturn,
-  getCurrentParagraph
 }

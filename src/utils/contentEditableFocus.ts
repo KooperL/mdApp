@@ -6,4 +6,4 @@ function contentEditableFocus(event: any) {
   innerParagraph.focus();
 }
 
-export default contentEditableFocus
+export {}
