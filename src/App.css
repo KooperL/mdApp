@@ -4,6 +4,7 @@
   background-color: #d2d2d2;
   display: flex;
   justify-content: center;
+  overflow: hidden;
 }
 
 .container {
@@ -21,14 +22,13 @@
 
 #wysiwyg {
   box-sizing: border-box;
-  height: 30rem;
-  width: 60%;
+  height: 100%;
+  width: 720px;
   background-color: #fefefe;
   outline: none;
   padding: 1rem;
   /**all: unset;**/
-  overflow-y: scroll;
-  position: relative;
+  overflow-y: auto;
 }
 
 #wysiwyg > p {
@@ -48,3 +48,8 @@ form {
   width: 100%;
 }
 
+@media screen and (max-width: 720px) {
+  #wysiwyg {
+    width: 100%;
+  }
+}

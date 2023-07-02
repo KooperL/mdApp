@@ -7,7 +7,7 @@ import { keyPresshandler } from "./utils/keyboardEventHandler";
 
 
 function App() {
-  const [str, setStr] = createSignal("");
+  const [font, setFont] = createSignal("");
   const contentID = "wysiwyg"
 
   return (
@@ -32,6 +32,18 @@ function App() {
         >
           <i>Italics</i>
         </button>
+        <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
+          const elem = document.getElementById(contentID)
+          if (!elem) return
+          elem.style.fontFamily = e.target.value
+          }}>
+          <option>Serif</option>
+          <option>Arial</option>
+          <option>Sans-Serif</option>                                  
+          <option>Tahoma</option>
+          <option>Verdana</option>
+          <option>Lucida Sans Unicode</option>                               
+        </select>
         </div>
         <div id="content-container">
           <div
