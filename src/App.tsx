@@ -32,6 +32,12 @@ function App() {
         >
           <i>Italics</i>
         </button>
+        <button onclick={() => {
+            updateSelection(contentID, "list")
+          }}
+        >
+          <i>1. ___</i>
+        </button>
         <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
           const elem = document.getElementById(contentID)
           if (!elem) return

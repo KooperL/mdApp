@@ -32,6 +32,7 @@ function getSelectionCharacterOffsetWithin(element: HTMLElement) {
     return { start: start, end: end };
 }
 
+// TODO: If selection length is 0, apply transformation to whole word
 async function updateSelection(content_id: string, action: string) {
   const wysiwyg = document.getElementById(content_id)
   const selection: Selection | null = window.getSelection();
@@ -75,7 +76,7 @@ async function updateSelection(content_id: string, action: string) {
         end: Math.max(Math.min(end - rollingTicker + contentLength, contentLength), 0),
         transformation: action
       }
-      console.log(args)
+      // console.log(args)
       const newHTML: string = await invoke("process_styling", args)
       
       console.log(newHTML)
