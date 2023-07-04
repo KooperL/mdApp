@@ -12,10 +12,11 @@ function App() {
 
   /**
     * TODO for MVP
-    * Unordered list
     * Checkbox
     * Table
-    * Code
+    * Heading
+    * Strikethrough
+    * Underline
   **/
 
   return (
@@ -32,31 +33,43 @@ function App() {
             updateSelection(contentID, "bold")
           }}
         >
-          <b>Bold</b>
+          <b>B</b>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "emphasise")
           }}
         >
-          <i>Italics</i>
+          <i>I</i>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "ordered-list")
           }}
         >
-          <span>1. ___</span>
+          <span>1. __</span>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "unordered-list")
           }}
         >
-          <span>- ___</span>
+          <span>⋅ __</span>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "code")
           }}
         >
           <code>\{"</>"}</code>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "superscript")
+          }}
+        >
+          <span>a<sup>x</sup></span>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "subscript")
+          }}
+        >
+          <span>a<sub>x</sub></span>
         </button>
         <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
           const elem = document.getElementById(contentID)

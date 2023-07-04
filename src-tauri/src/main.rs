@@ -16,6 +16,8 @@ struct StyledCharacter {
     is_bold: bool,
     is_emphasised: bool,
     is_code: bool,
+    is_superscript: bool,
+    is_subscript: bool,
     is_heading: bool,
     character: String,
     list_type: Option<ListTypes>,
@@ -35,13 +37,17 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut is_emphasised = false;
     let mut is_heading = false;
     let mut is_code = false;
-    let mut rolling_char_counter = 0;
+    let mut is_superscript = false;
+    let mut is_subscript = false;
     let mut list_type: Option<ListTypes> = None;
     let mut list_item: Option<i32> = None;
 
+    let mut rolling_char_counter = 0;
     let mut whole_area_is_bold_formatted = true;
     let mut whole_area_is_emphasised_formatted = true;
     let mut whole_area_is_code_formatted = true;
+    let mut whole_area_is_superscript_formatted = true;
+    let mut whole_area_is_subscript_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -59,8 +65,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         if !is_emphasised  && character != ' ' && character != '\u{200B}' {
                             whole_area_is_emphasised_formatted = false;
                         };
-                        if !is_code  && character != ' ' && character != '\u{200B}' {
+                        if !is_code && character != ' ' && character != '\u{200B}' {
                             whole_area_is_code_formatted = false;
+                        };
+                        if !is_superscript && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_superscript_formatted = false;
+                        };
+                        if !is_subscript && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_subscript_formatted = false;
                         };
                     };
                     struct_collection.push(StyledCharacter {
@@ -68,10 +80,17 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         is_emphasised,
                         is_heading,
                         is_code,
+                        is_subscript,
+                        is_superscript,
                         character: String::from(character),
                         list_type: if list_type.is_none() {
                             None
                         } else {
+                            // if let Some(val) = list_type {
+                            //     Some(val)
+                            // } else {
+                            //     None
+                            // }
                             match list_type {
                                 Some(ListTypes::Ordered) => Some(ListTypes::Ordered),
                                 Some(ListTypes::Unordered) => Some(ListTypes::Unordered),
@@ -88,19 +107,41 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 match local.as_str() {
                     "b" => {
                         is_bold = true;
+                        is_code = false;
+                        is_heading = false;
                     },
                     "i" => {
                         is_emphasised = true;
+                        is_code = false;
+                        is_heading = false;
                     },
                     "code" => {
                         is_emphasised = false;
                         is_bold = false;
                         is_code = true;
+                        is_heading = false;
+                    },
+                    "superscript" => {
+                        is_emphasised = false;
+                        is_bold = false;
+                        is_code = false;
+                        is_heading = false;
+                        is_superscript = true;
+                        is_subscript = false;
+                    },
+                    "subscript" => {
+                        is_emphasised = false;
+                        is_bold = false;
+                        is_code = false;
+                        is_heading = false;
+                        is_superscript = false;
+                        is_subscript = true;
                     },
                     "h1" => {
                         is_bold = false;
                         is_emphasised = false;
                         is_heading = true;
+                        is_code = false
                     },
                     "ol" => {
                         list_type = Some(ListTypes::Ordered);
@@ -128,6 +169,12 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     },
                     "</code>" => {
                         is_code = false;
+                    },
+                    "</sup>" => {
+                        is_superscript = false;
+                    },
+                    "</sub>" => {
+                        is_subscript = false;
                     },
                     "</h1>" => {
                         is_heading = false;
@@ -163,6 +210,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     for i in begin..end {
         match transformation {
             "bold" => {
+                struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_code = false;
+                struct_collection[i].is_subscript = false;
+                struct_collection[i].is_superscript = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_bold = !whole_area_is_bold_formatted;
                 } else {
@@ -170,6 +221,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 }
             },
             "emphasise" => {
+                struct_collection[i].is_bold = false;
+                struct_collection[i].is_code = false;
+                struct_collection[i].is_subscript = false;
+                struct_collection[i].is_superscript = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_emphasised = !whole_area_is_emphasised_formatted;
                 } else {
@@ -177,16 +232,49 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 }
             },
             "code" => {
+                struct_collection[i].is_bold = false;
+                struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_subscript = false;
+                struct_collection[i].is_superscript = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_code = !whole_area_is_code_formatted;
                 } else {
                     struct_collection[i].is_code = true;
                 }
             },
-            "heading" => {
+            "superscript" => {
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_code = false;
+                struct_collection[i].is_subscript = false;
+                if i >= begin && i <= end {
+                    struct_collection[i].is_superscript = !whole_area_is_superscript_formatted;
+                } else {
+                    struct_collection[i].is_superscript = true;
+                }
+            },
+            "subscript" => {
+                struct_collection[i].is_bold = false;
+                struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_code = false;
+                struct_collection[i].is_superscript = false;
+                if i >= begin && i <= end {
+                    struct_collection[i].is_subscript = !whole_area_is_subscript_formatted;
+                } else {
+                    struct_collection[i].is_subscript = true;
+                }
+            },
+            "heading" => {
+                // TODO: Apply this logic to the other conditions
+                struct_collection[i].is_bold = false;
+                struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_code = false;
                 struct_collection[i].is_heading = true;
+                // if i >= begin && i <= end {
+                //     struct_collection[i].is_subscript = !whole_area_is_subscript_formatted;
+                // } else {
+                //     struct_collection[i].is_subscript = true;
+                // }
             },
             "ordered-list" => {
                 struct_collection[i].list_item = if struct_collection[i].list_item == None {
@@ -208,11 +296,13 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         }
     }
 
-    println!("{:?}", struct_collection);
+    // println!("{:?}", struct_collection);
     // *****************  Begin final string build  ******************* //
     is_bold = false;
     is_emphasised = false;
     is_code = false;
+    is_superscript = false;
+    is_subscript = false;
     is_heading = false;
     list_type = None;
     list_item = None;
@@ -247,6 +337,22 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         if is_code && !char.is_code {
             write!(&mut builder, "</code>").unwrap();
             is_code = false;
+        }
+        if !is_superscript && char.is_superscript {
+            write!(&mut builder, "<sup>").unwrap();
+            is_superscript = true;
+        }
+        if is_superscript && !char.is_superscript {
+            write!(&mut builder, "</sup>").unwrap();
+            is_superscript = false;
+        }
+        if !is_subscript && char.is_subscript {
+            write!(&mut builder, "<sub>").unwrap();
+            is_subscript = true;
+        }
+        if is_subscript && !char.is_subscript {
+            write!(&mut builder, "</sub>").unwrap();
+            is_subscript = false;
         }
         if !is_heading && char.is_heading {
             write!(&mut builder, "<h1>").unwrap();
