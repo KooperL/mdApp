@@ -6,11 +6,19 @@ use std::fmt::Write;
 use xmlparser;
 
 #[derive(Debug)]
+enum ListTypes {
+    Ordered,
+    Unordered,
+}
+
+#[derive(Debug)]
 struct StyledCharacter {
     is_bold: bool,
     is_emphasised: bool,
+    is_code: bool,
     is_heading: bool,
     character: String,
+    list_type: Option<ListTypes>,
     list_item: Option<i32>
 }
 
@@ -26,12 +34,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut is_bold = false;
     let mut is_emphasised = false;
     let mut is_heading = false;
+    let mut is_code = false;
     let mut rolling_char_counter = 0;
-    let mut is_in_list = false;
-    let mut list_item: i32 = 0;
+    let mut list_type: Option<ListTypes> = None;
+    let mut list_item: Option<i32> = None;
 
     let mut whole_area_is_bold_formatted = true;
     let mut whole_area_is_emphasised_formatted = true;
+    let mut whole_area_is_code_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -49,13 +59,26 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         if !is_emphasised  && character != ' ' && character != '\u{200B}' {
                             whole_area_is_emphasised_formatted = false;
                         };
+                        if !is_code  && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_code_formatted = false;
+                        };
                     };
                     struct_collection.push(StyledCharacter {
                         is_bold,
                         is_emphasised,
                         is_heading,
+                        is_code,
                         character: String::from(character),
-                        list_item: if is_in_list {Some(list_item)} else {None},
+                        list_type: if list_type.is_none() {
+                            None
+                        } else {
+                            match list_type {
+                                Some(ListTypes::Ordered) => Some(ListTypes::Ordered),
+                                Some(ListTypes::Unordered) => Some(ListTypes::Unordered),
+                                _ => None
+                            }
+                        },
+                        list_item
                     });
                 }
             },
@@ -69,13 +92,23 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     "i" => {
                         is_emphasised = true;
                     },
+                    "code" => {
+                        is_emphasised = false;
+                        is_bold = false;
+                        is_code = true;
+                    },
                     "h1" => {
                         is_bold = false;
                         is_emphasised = false;
                         is_heading = true;
                     },
                     "ol" => {
-                        is_in_list = true;
+                        list_type = Some(ListTypes::Ordered);
+                        list_item = Some(0);
+                    },
+                    "ul" => {
+                        list_type = Some(ListTypes::Unordered);
+                        list_item = Some(0);
                     },
                     _ => {
                         // Others tags here
@@ -93,17 +126,25 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     "</i>" => {
                         is_emphasised = false;
                     },
+                    "</code>" => {
+                        is_code = false;
+                    },
                     "</h1>" => {
-                        is_bold = false;
-                        is_emphasised = false;
                         is_heading = false;
                     },
                     "</ol>" => {
-                        is_in_list = false;
-                        list_item = 0;
+                        list_type = None;
+                        list_item = None;
+                    },
+                    "</ul>" => {
+                        list_type = None;
+                        list_item = None;
                     },
                     "</li>" => {
-                        list_item += 1;
+                        if let Some(mut value) = list_item {
+                            value += 1;
+                            list_item = Some(value);
+                        }
                     },
                     _ => {
                         // Others tags here
@@ -135,13 +176,33 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     struct_collection[i].is_emphasised = true;
                 }
             },
+            "code" => {
+                if i >= begin && i <= end {
+                    struct_collection[i].is_code = !whole_area_is_code_formatted;
+                } else {
+                    struct_collection[i].is_code = true;
+                }
+            },
             "heading" => {
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
                 struct_collection[i].is_heading = true;
             },
-            "list" => {
-                struct_collection[i].list_item = if struct_collection[i].list_item == None {Some(0)} else {None};
+            "ordered-list" => {
+                struct_collection[i].list_item = if struct_collection[i].list_item == None {
+                    Some(0)
+                } else {
+                    None
+                };
+                struct_collection[i].list_type = Some(ListTypes::Ordered);
+            },
+            "unordered-list" => {
+                struct_collection[i].list_item = if struct_collection[i].list_item == None {
+                    Some(0)
+                } else {
+                    None
+                };
+                struct_collection[i].list_type = Some(ListTypes::Unordered);
             },
             _ => {},
         }
@@ -151,8 +212,11 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     // *****************  Begin final string build  ******************* //
     is_bold = false;
     is_emphasised = false;
+    is_code = false;
     is_heading = false;
-    is_in_list = false;
+    list_type = None;
+    list_item = None;
+
     let property = "contenteditable=\"true\" onKeyDown=\"keyPresshandler\"";
     let mut builder = String::new();
     write!(&mut builder, "<p {}>", property).unwrap();
@@ -176,6 +240,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</i>").unwrap();
             is_emphasised = false;
         }
+        if !is_code && char.is_code {
+            write!(&mut builder, "<code>").unwrap();
+            is_code = true;
+        }
+        if is_code && !char.is_code {
+            write!(&mut builder, "</code>").unwrap();
+            is_code = false;
+        }
         if !is_heading && char.is_heading {
             write!(&mut builder, "<h1>").unwrap();
             is_heading = true;
@@ -184,22 +256,65 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</h1>").unwrap();
             is_heading = false;
         }
-        if !is_in_list && char.list_item == Some(0) {
-            // Note: There was a thought to close other tags here to keep everything segregated
-            write!(&mut builder, "</p><ol {}><li>", property).unwrap();
-            is_in_list = true;
-        }
-        if is_in_list {
-            if char.list_item == Some(list_item + 1) {
-                write!(&mut builder, "</li><li>").unwrap();
-                list_item = list_item + 1;
+        match list_type {
+            None => {
+                match char.list_type {
+                    Some(ListTypes::Ordered) => {
+                        if char.list_item == Some(0) {
+                            write!(&mut builder, "</p><ol {}><li>", property).unwrap();
+                            list_type = Some(ListTypes::Ordered);
+                            list_item = char.list_item;
+                        }
+                    },
+                    Some(ListTypes::Unordered) => {
+                        if char.list_item == Some(0) {
+                            write!(&mut builder, "</p><ul {}><li>", property).unwrap();
+                            list_type = Some(ListTypes::Unordered);
+                            list_item = char.list_item;
+                        }
+                    },
+                    None => {}
+                }
+            },
+            Some(ListTypes::Ordered) => {
+                match char.list_item {
+                    None => {
+                        write!(&mut builder, "</li></ol><p {}>", property).unwrap();
+                        list_type = None;
+                        list_item = None;
+                    },
+                    Some(val) => {
+                        if list_item == Some(val + 1) {
+                            write!(&mut builder, "</li><li>").unwrap();
+                            if let Some(mut value) = list_item {
+                                value += 1;
+                                list_item = Some(value);
+                            }
+                        }
+                    }
+                }
             }
-            if char.list_item == None {
-                write!(&mut builder, "</li></ol><p {}>", property).unwrap();
-                is_in_list = false;
-                list_item = 0;
+            Some(ListTypes::Unordered) => {
+                match char.list_item {
+                    None => {
+                        write!(&mut builder, "</li></ul><p {}>", property).unwrap();
+                        list_type = None;
+                        list_item = None;
+                    },
+                    Some(val) => {
+                        if list_item == Some(val + 1) {
+                            write!(&mut builder, "</li><li>").unwrap();
+                            if let Some(mut value) = list_item {
+                                value += 1;
+                                list_item = Some(value);
+                            }
+                        }
+                    }
+                }
             }
         }
+
+
         // Write the character
         write!(&mut builder, "{}", char.character).unwrap();
     }
@@ -211,11 +326,20 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     if is_emphasised {
         write!(&mut builder, "</i>").unwrap();
     }
+    if is_code {
+        write!(&mut builder, "</code>").unwrap();
+    }
     if is_heading {
         write!(&mut builder, "</h1>").unwrap();
     }
-    if is_in_list {
-        write!(&mut builder, "</li></ol>").unwrap();
+    match list_type {
+        Some(ListTypes::Ordered) => {
+            write!(&mut builder, "</li></ol>").unwrap();
+        },
+        Some(ListTypes::Unordered) => {
+            write!(&mut builder, "</li></ull>").unwrap();
+        },
+            _ => {}
     }
     write!(&mut builder, "</p>").unwrap();
 

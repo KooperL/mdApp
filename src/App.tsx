@@ -10,6 +10,14 @@ function App() {
   const [font, setFont] = createSignal("");
   const contentID = "wysiwyg"
 
+  /**
+    * TODO for MVP
+    * Unordered list
+    * Checkbox
+    * Table
+    * Code
+  **/
+
   return (
     <div class="container">
       <form
@@ -33,10 +41,22 @@ function App() {
           <i>Italics</i>
         </button>
         <button onclick={() => {
-            updateSelection(contentID, "list")
+            updateSelection(contentID, "ordered-list")
           }}
         >
-          <i>1. ___</i>
+          <span>1. ___</span>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "unordered-list")
+          }}
+        >
+          <span>- ___</span>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "code")
+          }}
+        >
+          <code>\{"</>"}</code>
         </button>
         <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
           const elem = document.getElementById(contentID)

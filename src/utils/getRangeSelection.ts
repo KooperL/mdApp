@@ -1,6 +1,6 @@
 import { invoke } from "@tauri-apps/api/tauri";
 
-
+// https://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
 function getSelectionCharacterOffsetWithin(element: HTMLElement) {
     var start = 0;
     var end = 0;
