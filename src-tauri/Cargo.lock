@@ -1739,6 +1739,24 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
 
 [[package]]
+name = "mdApp"
+version = "0.0.0"
+dependencies = [
+ "html5ever 0.26.0",
+ "markup5ever 0.11.0",
+ "markup5ever_rcdom",
+ "quick-xml 0.21.0",
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tendril",
+ "xi-core-lib",
+ "xml5ever",
+ "xmlparser",
+]
+
+[[package]]
 name = "memchr"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3014,24 +3032,6 @@ dependencies = [
  "webkit2gtk",
  "webview2-com",
  "windows 0.39.0",
-]
-
-[[package]]
-name = "tauri-app"
-version = "0.0.0"
-dependencies = [
- "html5ever 0.26.0",
- "markup5ever 0.11.0",
- "markup5ever_rcdom",
- "quick-xml 0.21.0",
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tendril",
- "xi-core-lib",
- "xml5ever",
- "xmlparser",
 ]
 
 [[package]]

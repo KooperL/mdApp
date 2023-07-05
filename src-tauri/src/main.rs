@@ -21,6 +21,7 @@ struct StyledCharacter {
     is_strikethrough: bool,
     is_code: bool,
     is_heading: bool,
+    is_check: bool,
     character: String,
     list_type: Option<ListTypes>,
     list_item: Option<i32>
@@ -43,6 +44,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut is_strikethrough = false;
     let mut is_superscript = false;
     let mut is_subscript = false;
+    let mut is_check = false;
     let mut list_type: Option<ListTypes> = None;
     let mut list_item: Option<i32> = None;
 
@@ -52,8 +54,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut whole_area_is_underline_formatted = true;
     let mut whole_area_is_strikethrough_formatted = true;
     let mut whole_area_is_code_formatted = true;
+    let mut whole_area_is_heading_formatted = true;
     let mut whole_area_is_superscript_formatted = true;
     let mut whole_area_is_subscript_formatted = true;
+    let mut whole_area_is_check_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -80,8 +84,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         if !is_subscript && character != ' ' && character != '\u{200B}' {
                             whole_area_is_subscript_formatted = false;
                         };
+                        if !is_heading && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_heading_formatted = false;
+                        };
                         if !is_strikethrough && character != ' ' && character != '\u{200B}' {
                             whole_area_is_strikethrough_formatted = false;
+                        };
+                        if !is_check && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_check_formatted = false;
                         };
                         if !is_underline && character != ' ' && character != '\u{200B}' {
                             whole_area_is_underline_formatted = false;
@@ -94,6 +104,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         is_strikethrough,
                         is_heading,
                         is_code,
+                        is_check,
                         is_subscript,
                         is_superscript,
                         character: String::from(character),
@@ -133,6 +144,15 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         is_strikethrough = true;
                         is_code = false;
                         is_heading = false;
+                    },
+                    "input" => {
+                        // type="check"??
+                        is_strikethrough = false;
+                        is_code = false;
+                        is_heading = false;
+                        is_check = true;
+                        list_type = None;
+                        list_item = None;
                     },
                     "u" => {
                         is_underline = true;
@@ -197,6 +217,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     "</u>" => {
                         is_underline = false;
                     },
+                    "</input>" => {
+                        is_check = false;
+                    },
                     "</code>" => {
                         is_code = false;
                     },
@@ -244,6 +267,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_subscript = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_bold = !whole_area_is_bold_formatted;
                 } else {
@@ -254,16 +278,28 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_subscript = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_emphasised = !whole_area_is_emphasised_formatted;
                 } else {
                     struct_collection[i].is_emphasised = true;
                 }
             },
+            "check" => {
+                struct_collection[i].is_heading = false;
+                struct_collection[i].list_type = None;
+                struct_collection[i].list_item = None;
+                if i >= begin && i <= end {
+                    struct_collection[i].is_check = !whole_area_is_check_formatted;
+                } else {
+                    struct_collection[i].is_check = true;
+                }
+            },
             "underline" => {
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_subscript = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_underline = !whole_area_is_underline_formatted;
                 } else {
@@ -274,6 +310,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_subscript = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_strikethrough = !whole_area_is_strikethrough_formatted;
                 } else {
@@ -284,7 +321,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
                 struct_collection[i].is_subscript = false;
+                struct_collection[i].is_strikethrough = false;
+                struct_collection[i].is_underline = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_code = !whole_area_is_code_formatted;
                 } else {
@@ -295,7 +335,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
                 struct_collection[i].is_code = false;
+                struct_collection[i].is_strikethrough = false;
+                struct_collection[i].is_underline = false;
                 struct_collection[i].is_subscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_superscript = !whole_area_is_superscript_formatted;
                 } else {
@@ -305,8 +348,11 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             "subscript" => {
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_strikethrough = false;
+                struct_collection[i].is_underline = false;
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_superscript = false;
+                struct_collection[i].is_heading = false;
                 if i >= begin && i <= end {
                     struct_collection[i].is_subscript = !whole_area_is_subscript_formatted;
                 } else {
@@ -317,15 +363,20 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 // TODO: Apply this logic to the other conditions
                 struct_collection[i].is_bold = false;
                 struct_collection[i].is_emphasised = false;
+                struct_collection[i].is_strikethrough = false;
+                struct_collection[i].is_underline = false;
                 struct_collection[i].is_code = false;
                 struct_collection[i].is_heading = true;
-                // if i >= begin && i <= end {
-                //     struct_collection[i].is_subscript = !whole_area_is_subscript_formatted;
-                // } else {
-                //     struct_collection[i].is_subscript = true;
-                // }
+                struct_collection[i].is_check = false;
+                if i >= begin && i <= end {
+                    struct_collection[i].is_heading = !whole_area_is_heading_formatted;
+                } else {
+                    struct_collection[i].is_heading = true;
+                }
             },
             "ordered-list" => {
+                struct_collection[i].is_heading = false;
+                struct_collection[i].is_check = false;
                 struct_collection[i].list_item = if struct_collection[i].list_item == None {
                     Some(0)
                 } else {
@@ -334,6 +385,8 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].list_type = Some(ListTypes::Ordered);
             },
             "unordered-list" => {
+                struct_collection[i].is_heading = false;
+                struct_collection[i].is_check = false;
                 struct_collection[i].list_item = if struct_collection[i].list_item == None {
                     Some(0)
                 } else {
@@ -355,6 +408,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     is_superscript = false;
     is_subscript = false;
     is_heading = false;
+    is_check = false;
     list_type = None;
     list_item = None;
 
@@ -388,6 +442,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         if is_underline && !char.is_underline {
             write!(&mut builder, "</u>").unwrap();
             is_underline = false;
+        }
+        if !is_check && char.is_check {
+            write!(&mut builder, "<input type=\"checkbox\">").unwrap();
+            is_check = true;
+        }
+        if is_check && !char.is_check {
+            write!(&mut builder, "</input>").unwrap();
+            is_check = false;
         }
         if !is_strikethrough && char.is_strikethrough {
             write!(&mut builder, "<s>").unwrap();
@@ -429,6 +491,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</h1>").unwrap();
             is_heading = false;
         }
+
         match list_type {
             None => {
                 match char.list_type {
@@ -495,6 +558,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     // Close remaining open tags
     if is_bold {
         write!(&mut builder, "</b>").unwrap();
+    }
+    if is_check {
+        write!(&mut builder, "</input>").unwrap();
     }
     if is_emphasised {
         write!(&mut builder, "</i>").unwrap();
