@@ -12,13 +12,17 @@ function App() {
 
   /**
     * TODO for MVP
-    * Checkbox
-    * Table
-    * Heading
-    * Strikethrough
-    * Underline
+    * Checkbox (input type=checkbox)
+    * Table (table tr th/td)
+    * Heading (h1)
+    * Strikethrough (s)
+    * Underline (u)
   **/
 
+  /**
+    * Notes:
+    * whole_area_is_subscript_formatted flag not working correctly
+  **/
   return (
     <div class="container">
       <form
@@ -42,16 +46,28 @@ function App() {
           <i>I</i>
         </button>
         <button onclick={() => {
+            updateSelection(contentID, "strikethrough")
+          }}
+        >
+          <s>S</s>
+        </button>
+        <button onclick={() => {
+            updateSelection(contentID, "underline")
+          }}
+        >
+          <u>U</u>
+        </button>
+        <button onclick={() => {
             updateSelection(contentID, "ordered-list")
           }}
         >
-          <span>1. __</span>
+          <span>1.</span>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "unordered-list")
           }}
         >
-          <span>⋅ __</span>
+          <span>⋅&nbsp;</span>
         </button>
         <button onclick={() => {
             updateSelection(contentID, "code")
