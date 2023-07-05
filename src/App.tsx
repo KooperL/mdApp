@@ -7,22 +7,17 @@ import { keyPresshandler } from "./utils/keyboardEventHandler";
 
 
 function App() {
+  document.title = 'mdApp'
   const [font, setFont] = createSignal("");
   const contentID = "wysiwyg"
 
-  /**
-    * TODO for MVP
-    * Checkbox (input type=checkbox)
-    * Table (table tr th/td)
-    * Heading (h1)
-    * Strikethrough (s)
-    * Underline (u)
-  **/
+/**
+  * TODO
+  * Table (table tr th/td)
+  * Button to selected if caret is over element
+  * Raw paste
+**/
 
-  /**
-    * Notes:
-    * whole_area_is_subscript_formatted flag not working correctly
-  **/
   return (
     <div class="container">
       <form
@@ -33,89 +28,101 @@ function App() {
         }}
       >
         <div class="toolbar">
-          <button onclick={() => {
-            updateSelection(contentID, "bold")
-          }}
-        >
-          <b>B</b>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "emphasise")
-          }}
-        >
-          <i>I</i>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "strikethrough")
-          }}
-        >
-          <s>S</s>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "underline")
-          }}
-        >
-          <u>U</u>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "ordered-list")
-          }}
-        >
-          <span>1.</span>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "unordered-list")
-          }}
-        >
-          <span>⋅&nbsp;</span>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "code")
-          }}
-        >
-          <code>\{"</>"}</code>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "superscript")
-          }}
-        >
-          <span>a<sup>x</sup></span>
-        </button>
-        <button onclick={() => {
-            updateSelection(contentID, "subscript")
-          }}
-        >
-          <span>a<sub>x</sub></span>
-        </button>
-        <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
-          const elem = document.getElementById(contentID)
-          if (!elem) return
-          elem.style.fontFamily = e.target.value
-          }}>
-          <option>Serif</option>
-          <option>Arial</option>
-          <option>Sans-Serif</option>                                  
-          <option>Tahoma</option>
-          <option>Verdana</option>
-          <option>Lucida Sans Unicode</option>                               
-        </select>
-        </div>
-        <div id="content-container">
-          <div
-            id={contentID}
-            contenteditable={true}
+          <div class="button-container">
+            <button onclick={() => {
+              updateSelection(contentID, "bold")
+            }}
           >
-            <p 
-              contenteditable={true}
-              onKeyDown={keyPresshandler}
-            >&#8203;</p>
+            <b>B</b>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "emphasise")
+            }}
+          >
+            <i style={{'font-family': 'serif'}}>I</i>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "strikethrough")
+            }}
+          >
+            <s>S</s>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "underline")
+            }}
+          >
+            <u>U</u>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "ordered-list")
+            }}
+          >
+            <span>1.</span>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "unordered-list")
+            }}
+          >
+            <span>●</span>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "code")
+            }}
+          >
+            <code style={{'font-size': 'smaller'}}>{"</>"}</code>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "check")
+            }}
+          >
+            <span>✓</span>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "superscript")
+            }}
+          >
+            <span>a<sup>x</sup></span>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "heading")
+            }}
+          >
+            <span># _</span>
+          </button>
+          <button onclick={() => {
+              updateSelection(contentID, "subscript")
+            }}
+          >
+            <span>a<sub>x</sub></span>
+          </button>
           </div>
+          <select id="selecth1FontFamily" name="selectFontFamily" onchange={(e) => {
+            const elem = document.getElementById(contentID)
+            if (!elem) return
+            elem.style.fontFamily = e.target.value
+            }}>
+            <option>Serif</option>
+            <option>Arial</option>
+            <option>Sans-Serif</option>                                  
+            <option>Tahoma</option>
+            <option>Verdana</option>
+            <option>Lucida Sans Unicode</option>                               
+          </select>
+          </div>
+          <div id="content-container">
+            <div
+              id={contentID}
+              contenteditable={true}
+            >
+              <p 
+                contenteditable={true}
+                onKeyDown={keyPresshandler}
+              >&#8203;</p>
+            </div>
         </div>
       </form>
     </div>
   );
 }
-
-// Spaces: \u{3164} \u{200b}
 
 export default App;
