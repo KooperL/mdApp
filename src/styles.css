@@ -4,8 +4,8 @@
   line-height: 24px;
   font-weight: 400;
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+  color: var(--fg-1);
+  background-color: var(--bg-2);
   overscroll-behavior: none;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -13,9 +13,19 @@
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
 }
+
  * {
+	--bg-1: hsl(0, 0%, 100%);
+	--bg-2: hsl(206, 20%, 90%);
+	--bg-3: hsl(206, 20%, 80%);
+	--fg-1: hsl(0, 0%, 13%);
+	--fg-2: hsl(0, 0%, 20%);
+	--fg-2: hsl(0, 0%, 30%);
+  --accent-1: #A1B5D8;
+  --accent-2: #738290;
   overscroll-behavior: none;
 }
+
 body {
   height: 100vh;
   margin: 0;
