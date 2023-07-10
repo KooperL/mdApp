@@ -203,7 +203,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
 
             // Matchin closing token
             xmlparser::Token::ElementEnd {span, end} => {
-                println!("{}", span.as_str());
+                // println!("{}", span.as_str());
                 match span.as_str() {
                     "</b>" => {
                         is_bold = false;
