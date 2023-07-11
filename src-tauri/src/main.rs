@@ -85,18 +85,27 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         if !is_emphasised && character != ' ' && character != '\u{200B}' {
                             whole_area_is_emphasised_formatted = false;
                         };
-                        if !is_code && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_code_formatted = false;
+                        if character != ' ' && character != '\u{200B}' {
+                            match is_special_font {
+                                Some(SpecialFont::Code) => {
+                                    whole_area_is_code_formatted = false;
+                                },
+                                Some(SpecialFont::Subscript) => {
+                                    whole_area_is_subscript_formatted = false;
+                                },
+                                Some(SpecialFont::Superscript) => {
+                                    whole_area_is_superscript_formatted = false;
+                                },
+                                _ => {},
+                            };
+                            match &is_special_style {
+                                Some(SpecialStyle::Header) => {
+                                    whole_area_is_heading_formatted = false;
+                                },
+                                _ => {},
+                            };
                         };
-                        if !is_superscript && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_superscript_formatted = false;
-                        };
-                        if !is_subscript && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_subscript_formatted = false;
-                        };
-                        if !is_heading && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_heading_formatted = false;
-                        };
+
                         if !is_strikethrough && character != ' ' && character != '\u{200B}' {
                             whole_area_is_strikethrough_formatted = false;
                         };
@@ -112,8 +121,16 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                         is_emphasised,
                         is_underline,
                         is_strikethrough,
-                        is_special_style,
-                        is_special_font,
+                        is_special_style: match is_special_style {
+                            Some(SpecialStyle::Header) => Some(SpecialStyle::Header),
+                            None => None,
+                        },
+                        is_special_font: match is_special_font {
+                            Some(SpecialFont::Superscript) => Some(SpecialFont::Superscript),
+                            Some(SpecialFont::Subscript) => Some(SpecialFont::Subscript),
+                            Some(SpecialFont::Code) => Some(SpecialFont::Code),
+                            _ => None
+                        },
                         character: String::from(character),
                         list_type: if list_type.is_none() {
                             None
@@ -312,9 +329,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_underline = false;
 
                 if whole_area_is_code_formatted {
-                    struct_collection[i].is_special_font = None;
-                } else {
                     struct_collection[i].is_special_font = Some(SpecialFont::Code);
+                } else {
+                    struct_collection[i].is_special_font = None;
                 };
             },
             "superscript" => {
@@ -325,9 +342,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_underline = false;
 
                 if whole_area_is_superscript_formatted {
-                    struct_collection[i].is_special_font = None;
-                } else {
                     struct_collection[i].is_special_font = Some(SpecialFont::Superscript);
+                } else {
+                    struct_collection[i].is_special_font = None;
                 };
             },
             "subscript" => {
@@ -338,9 +355,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_underline = false;
 
                 if whole_area_is_subscript_formatted {
-                    struct_collection[i].is_special_font = None;
-                } else {
                     struct_collection[i].is_special_font = Some(SpecialFont::Subscript);
+                } else {
+                    struct_collection[i].is_special_font = None;
                 };
             },
             "heading" => {
@@ -351,9 +368,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_special_font = None;
 
                 if whole_area_is_heading_formatted {
-                    struct_collection[i].is_special_style = None;
-                } else {
                     struct_collection[i].is_special_style = Some(SpecialStyle::Header);
+                } else {
+                    struct_collection[i].is_special_style = None;
                 };
             },
             "check" => {
@@ -404,6 +421,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     if struct_collection.len() == 0 {
         write!(&mut builder, "\u{200B}").unwrap();
     }
+
     for char in struct_collection {
         if !is_bold && char.is_bold {
             write!(&mut builder, "<b>").unwrap();
@@ -429,14 +447,14 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</u>").unwrap();
             is_underline = false;
         }
-        if !is_check && char.is_check {
-            write!(&mut builder, "<input type=\"checkbox\">").unwrap();
-            is_check = true;
-        }
-        if is_check && !char.is_check {
-            write!(&mut builder, "</input>").unwrap();
-            is_check = false;
-        }
+       // if !is_check && char.is_check {
+       //     write!(&mut builder, "<input type=\"checkbox\">").unwrap();
+       //     is_check = true;
+       // }
+       // if is_check && !char.is_check {
+       //     write!(&mut builder, "</input>").unwrap();
+       //     is_check = false;
+       // }
         if !is_strikethrough && char.is_strikethrough {
             write!(&mut builder, "<s>").unwrap();
             is_strikethrough = true;
@@ -445,38 +463,74 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</s>").unwrap();
             is_strikethrough = false;
         }
-        if !is_code && char.is_code {
-            write!(&mut builder, "<code>").unwrap();
-            is_code = true;
-        }
-        if is_code && !char.is_code {
-            write!(&mut builder, "</code>").unwrap();
-            is_code = false;
-        }
-        if !is_superscript && char.is_superscript {
-            write!(&mut builder, "<sup>").unwrap();
-            is_superscript = true;
-        }
-        if is_superscript && !char.is_superscript {
-            write!(&mut builder, "</sup>").unwrap();
-            is_superscript = false;
-        }
-        if !is_subscript && char.is_subscript {
-            write!(&mut builder, "<sub>").unwrap();
-            is_subscript = true;
-        }
-        if is_subscript && !char.is_subscript {
-            write!(&mut builder, "</sub>").unwrap();
-            is_subscript = false;
-        }
-        if !is_heading && char.is_heading {
-            write!(&mut builder, "<h1>").unwrap();
-            is_heading = true;
-        }
-        if is_heading && !char.is_heading {
-            write!(&mut builder, "</h1>").unwrap();
-            is_heading = false;
-        }
+
+        match is_special_style {
+            None => {
+                match char.is_special_style {
+                    Some(SpecialStyle::Header) => {
+                        write!(&mut builder, "<h1>").unwrap();
+                        is_special_style = Some(SpecialStyle::Header);
+                    },
+                    None => {},
+                }
+            },
+            Some(SpecialStyle::Header) => {
+                match char.is_special_style {
+                    None => {
+                        write!(&mut builder, "</h1>").unwrap();
+                        is_special_style = None;
+                    },
+                    Some(_) => {},
+                }
+            },
+        };
+
+        match is_special_font {
+            None => {
+                match char.is_special_font {
+                    Some(SpecialFont::Superscript) => {
+                            write!(&mut builder, "<sup>").unwrap();
+                            is_special_font = Some(SpecialFont::Superscript);
+                    },
+                    Some(SpecialFont::Subscript) => {
+                            write!(&mut builder, "<sub>").unwrap();
+                            is_special_font = Some(SpecialFont::Subscript);
+                    },
+                    Some(SpecialFont::Code) => {
+                            write!(&mut builder, "<code>").unwrap();
+                            is_special_font = Some(SpecialFont::Code);
+                    },
+                    None => {}
+                };
+            },
+            Some(SpecialFont::Superscript) => {
+                match char.is_special_font {
+                    None => {
+                        write!(&mut builder, "</sup>").unwrap();
+                        is_special_font = None;
+                    }
+                    Some(_) => {}
+                };
+            },
+            Some(SpecialFont::Subscript) => {
+                match char.is_special_font {
+                    None => {
+                        write!(&mut builder, "</sub>").unwrap();
+                        is_special_font = None;
+                    }
+                    Some(_) => {}
+                };
+            },
+            Some(SpecialFont::Code) => {
+                match char.is_special_font {
+                    None => {
+                        write!(&mut builder, "</Code>").unwrap();
+                        is_special_font = None;
+                    }
+                    Some(_) => {}
+                };
+            },
+        };
 
         match list_type {
             None => {
@@ -582,21 +636,21 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     if is_underline {
         write!(&mut builder, "</u>").unwrap();
     }
-    if let Some(SpecialFont::Code) = SpecialFont {
-
-    } 
-    if is_code {
-        write!(&mut builder, "</code>").unwrap();
-    }
-    if is_superscript {
-        write!(&mut builder, "</sup>").unwrap();
-    }
-    if is_subscript {
-        write!(&mut builder, "</sub>").unwrap();
-    }
-    if is_heading {
+    match is_special_font {
+        Some(SpecialFont::Code) => {
+            write!(&mut builder, "</code>").unwrap();
+        },
+        Some(SpecialFont::Subscript) => {
+            write!(&mut builder, "</sub>").unwrap();
+        },
+        Some(SpecialFont::Superscript) => {
+            write!(&mut builder, "</sup>").unwrap();
+        },
+        _ => {}
+    };
+    if let Some(val) = is_special_style {
         write!(&mut builder, "</h1>").unwrap();
-    }
+    };
     match list_type {
         Some(ListTypes::Ordered) => {
             write!(&mut builder, "</li></ol>").unwrap();
@@ -605,9 +659,10 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             write!(&mut builder, "</li></ull>").unwrap();
         },
             _ => {}
-    }
-    write!(&mut builder, "</p>").unwrap();
+    };
 
+    // *****************  Return  ******************* //
+    write!(&mut builder, "</p>").unwrap();
     // *****************  Return  ******************* //
      builder
 }
