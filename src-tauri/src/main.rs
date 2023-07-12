@@ -4,38 +4,7 @@
 use std::string::String;
 use std::fmt::Write;
 use xmlparser;
-
-#[derive(Debug)]
-enum ListTypes {
-    Ordered,
-    Unordered,
-    Check
-}
-
-#[derive(Debug)]
-enum SpecialFont {
-    Code,
-    Subscript,
-    Superscript,
-}
-
-#[derive(Debug)]
-enum SpecialStyle {
-    Header
-}
-
-#[derive(Debug)]
-struct StyledCharacter {
-    is_bold: bool,
-    is_emphasised: bool,
-    is_underline: bool,
-    is_strikethrough: bool,
-    is_special_font: Option<SpecialFont>,
-    is_special_style: Option<SpecialStyle>,
-    character: String,
-    list_type: Option<ListTypes>,
-    list_item: Option<i32>
-}
+#[path = "./types.rs"] mod Types;
 
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
@@ -43,19 +12,22 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     // println!("Args: {:?}, {:?}, {:?}", html, begin, end);
 
     // *****************  Begin parse to vec<struct>  ******************* //
-    let mut struct_collection: Vec<StyledCharacter> = Vec::new(); 
+    let mut struct_collection: Vec<Types::StyledCharacter> = Vec::new(); 
 
     // Contextual parsing flags
-    let mut is_bold = false;
-    let mut is_emphasised = false;
-    let mut is_special_style: Option<SpecialStyle> = None;
-    let mut is_special_font: Option<SpecialFont> = None;
-    let mut is_underline = false;
-    let mut is_strikethrough = false;
-    let mut is_check = false;
-    let mut list_type: Option<ListTypes> = None;
+    let mut basic_format = Types::BasicFormat {
+        is_bold: false,
+        is_emphasised: false,
+        is_underline: false,
+        is_strikethrough: false,
+        // ::New()
+    };
+    let mut is_special_style: Option<Types::SpecialStyle> = None;
+    let mut is_special_font: Option<Types::SpecialFont> = None;
+    let mut list_type: Option<Types::ListTypes> = None;
     let mut list_item: Option<i32> = None;
 
+    // Cide smell
     let mut rolling_char_counter = 0;
     let mut whole_area_is_bold_formatted = true;
     let mut whole_area_is_emphasised_formatted = true;
@@ -65,7 +37,6 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut whole_area_is_heading_formatted = true;
     let mut whole_area_is_superscript_formatted = true;
     let mut whole_area_is_subscript_formatted = true;
-    let mut whole_area_is_check_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -77,69 +48,64 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 for (index, character) in val.chars().enumerate() {
                     rolling_char_counter += 1;
                     if rolling_char_counter >= begin && rolling_char_counter <= end {
-                        if !is_bold && character != ' ' && character != '\u{200B}' {
+                        if !basic_format.is_bold && character != ' ' && character != '\u{200B}' {
                             whole_area_is_bold_formatted = false;
                         };
                         // does it work if it's the other way around 
 
-                        if !is_emphasised && character != ' ' && character != '\u{200B}' {
+                        if !basic_format.is_emphasised && character != ' ' && character != '\u{200B}' {
                             whole_area_is_emphasised_formatted = false;
                         };
+                        if !basic_format.is_strikethrough && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_strikethrough_formatted = false;
+                        };
+                        if !basic_format.is_underline && character != ' ' && character != '\u{200B}' {
+                            whole_area_is_underline_formatted = false;
+                        };
+                        // missing list items?? Is this intentional
                         if character != ' ' && character != '\u{200B}' {
                             match is_special_font {
-                                Some(SpecialFont::Code) => {
+                                Some(Types::SpecialFont::Code) => {
                                     whole_area_is_code_formatted = false;
                                 },
-                                Some(SpecialFont::Subscript) => {
+                                Some(Types::SpecialFont::Subscript) => {
                                     whole_area_is_subscript_formatted = false;
                                 },
-                                Some(SpecialFont::Superscript) => {
+                                Some(Types::SpecialFont::Superscript) => {
                                     whole_area_is_superscript_formatted = false;
                                 },
-                                _ => {},
+                                None => {},
                             };
                             match &is_special_style {
-                                Some(SpecialStyle::Header) => {
+                                Some(Types::SpecialStyle::Header) => {
                                     whole_area_is_heading_formatted = false;
                                 },
-                                _ => {},
+                                None => {},
                             };
                         };
 
-                        if !is_strikethrough && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_strikethrough_formatted = false;
-                        };
-                        if !is_check && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_check_formatted = false;
-                        };
-                        if !is_underline && character != ' ' && character != '\u{200B}' {
-                            whole_area_is_underline_formatted = false;
-                        };
                     };
-                    struct_collection.push(StyledCharacter {
-                        is_bold,
-                        is_emphasised,
-                        is_underline,
-                        is_strikethrough,
+                    struct_collection.push(Types::StyledCharacter {
+                        basic_formatting: basic_format.clone(),
                         is_special_style: match is_special_style {
-                            Some(SpecialStyle::Header) => Some(SpecialStyle::Header),
+                            Some(Types::SpecialStyle::Header) => Some(Types::SpecialStyle::Header),
                             None => None,
                         },
                         is_special_font: match is_special_font {
-                            Some(SpecialFont::Superscript) => Some(SpecialFont::Superscript),
-                            Some(SpecialFont::Subscript) => Some(SpecialFont::Subscript),
-                            Some(SpecialFont::Code) => Some(SpecialFont::Code),
-                            _ => None
+                            Some(Types::SpecialFont::Superscript) => Some(Types::SpecialFont::Superscript),
+                            Some(Types::SpecialFont::Subscript) => Some(Types::SpecialFont::Subscript),
+                            Some(Types::SpecialFont::Code) => Some(Types::SpecialFont::Code),
+                            None => None,
                         },
                         character: String::from(character),
                         list_type: if list_type.is_none() {
                             None
                         } else {
                             match list_type {
-                                Some(ListTypes::Ordered) => Some(ListTypes::Ordered),
-                                Some(ListTypes::Unordered) => Some(ListTypes::Unordered),
-                                Some(ListTypes::Check) => Some(ListTypes::Check),
-                                _ => None
+                                Some(Types::ListTypes::Ordered) => Some(Types::ListTypes::Ordered),
+                                Some(Types::ListTypes::Unordered) => Some(Types::ListTypes::Unordered),
+                                Some(Types::ListTypes::Check) => Some(Types::ListTypes::Check),
+                                None => None,
                             }
                         },
                         list_item
@@ -151,69 +117,57 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             xmlparser::Token::ElementStart {prefix: _, local, span} => {
                 match local.as_str() {
                     "b" => {
-                        is_bold = true;
+                        basic_format.is_bold = true;
                         is_special_style = None;
                         is_special_font = None;
                     },
                     "i" => {
-                        is_emphasised = true;
+                        basic_format.is_emphasised = true;
                         is_special_style = None;
                         is_special_font = None;
                     },
                     "s" => {
-                        is_strikethrough = true;
+                        basic_format.is_strikethrough = true;
+                        is_special_style = None;
+                        is_special_font = None;
+                    },
+                    "u" => {
+                        basic_format.is_underline = true;
                         is_special_style = None;
                         is_special_font = None;
                     },
                     "input" => {
-                        list_type = Some(ListTypes::Check);
+                        list_type = Some(Types::ListTypes::Check);
                         list_item = Some(0);
                     },
-                    "u" => {
-                        is_underline = true;
-                        is_special_style = None;
-                        is_special_font = None;
-                    },
                     "code" => {
-                        is_emphasised = false;
-                        is_bold = false;
-                        is_strikethrough = false;
-                        is_underline =false;
-                        is_special_font = Some(SpecialFont::Code);
+                        basic_format.make_all_false();
+                        is_special_font = Some(Types::SpecialFont::Code);
                         is_special_style = None;
                     },
                     "sup" => {
-                        is_emphasised = false;
-                        is_bold = false;
-                        is_strikethrough = false;
-                        is_underline =false;
-                        is_special_font = Some(SpecialFont::Superscript);
+                        basic_format.make_all_false();
+                        is_special_font = Some(Types::SpecialFont::Superscript);
                         is_special_style = None;
                     },
                     "sub" => {
-                        is_emphasised = false;
-                        is_bold = false;
-                        is_strikethrough = false;
-                        is_underline =false;
-                        is_special_font = Some(SpecialFont::Subscript);
+                        basic_format.make_all_false();
+                        is_special_font = Some(Types::SpecialFont::Subscript);
                         is_special_style = None;
                     },
                     "h1" => {
-                        is_emphasised = false;
-                        is_bold = false;
-                        is_strikethrough = false;
-                        is_underline =false;
+                        basic_format.make_all_false();
                         is_special_font = None;
-                        is_special_style = Some(SpecialStyle::Header);
+                        is_special_style = Some(Types::SpecialStyle::Header);
                     },
                     "ol" => {
                         is_special_style = None;
-                        list_type = Some(ListTypes::Ordered);
+                        list_type = Some(Types::ListTypes::Ordered);
                         list_item = Some(0);
                     },
                     "ul" => {
                         is_special_style = None;
-                        list_type = Some(ListTypes::Unordered);
+                        list_type = Some(Types::ListTypes::Unordered);
                         list_item = Some(0);
                     },
                     _ => {
@@ -227,38 +181,29 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 // println!("{}", span.as_str());
                 match span.as_str() {
                     "</b>" => {
-                        is_bold = false;
+                        basic_format.is_bold = false;
                     },
                     "</i>" => {
-                        is_emphasised = false;
+                        basic_format.is_emphasised = false;
                     },
                     "</s>" => {
-                        is_strikethrough = false;
+                        basic_format.is_strikethrough = false;
                     },
                     "</u>" => {
-                        is_underline = false;
+                        basic_format.is_underline = false;
                     },
                     "</input>" => {
                         list_type = None;
                         list_item = None;
                     },
-                    "</code>" => {
-                        is_special_font = None;
-                    },
-                    "</sup>" => {
-                        is_special_font = None;
-                    },
-                    "</sub>" => {
+                        // TODO: union these matches
+                    "</code>" | "</sup>" | "</sub>" => {
                         is_special_font = None;
                     },
                     "</h1>" => {
                         is_special_font = None;
                     },
-                    "</ol>" => {
-                        list_type = None;
-                        list_item = None;
-                    },
-                    "</ul>" => {
+                    "</ol>" | "</ul>" => {
                         list_type = None;
                         list_item = None;
                     },
@@ -289,86 +234,74 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 struct_collection[i].is_special_style = None;
                 struct_collection[i].is_special_font = None;
                 if i >= begin && i <= end {
-                    struct_collection[i].is_bold = !whole_area_is_bold_formatted;
+                    struct_collection[i].basic_formatting.is_bold = !whole_area_is_bold_formatted;
                 } else {
-                    struct_collection[i].is_bold = true;
+                    struct_collection[i].basic_formatting.is_bold = true;
                 }
             },
             "emphasise" => {
                 struct_collection[i].is_special_style = None;
                 struct_collection[i].is_special_font = None;
                 if i >= begin && i <= end {
-                    struct_collection[i].is_emphasised = !whole_area_is_emphasised_formatted;
+                    struct_collection[i].basic_formatting.is_emphasised = !whole_area_is_emphasised_formatted;
                 } else {
-                    struct_collection[i].is_emphasised = true;
+                    struct_collection[i].basic_formatting.is_emphasised = true;
                 }
             },
             "underline" => {
                 struct_collection[i].is_special_style = None;
                 struct_collection[i].is_special_font = None;
                 if i >= begin && i <= end {
-                    struct_collection[i].is_underline = !whole_area_is_underline_formatted;
+                    struct_collection[i].basic_formatting.is_underline = !whole_area_is_underline_formatted;
                 } else {
-                    struct_collection[i].is_underline = true;
+                    struct_collection[i].basic_formatting.is_underline = true;
                 }
             },
             "strikethrough" => {
                 struct_collection[i].is_special_style = None;
                 struct_collection[i].is_special_font = None;
                 if i >= begin && i <= end {
-                    struct_collection[i].is_strikethrough = !whole_area_is_strikethrough_formatted;
+                    struct_collection[i].basic_formatting.is_strikethrough = !whole_area_is_strikethrough_formatted;
                 } else {
-                    struct_collection[i].is_strikethrough = true;
+                    struct_collection[i].basic_formatting.is_strikethrough = true;
                 }
             },
             "code" => {
                 struct_collection[i].is_special_style = None;
-                struct_collection[i].is_bold = false;
-                struct_collection[i].is_emphasised = false;
-                struct_collection[i].is_strikethrough = false;
-                struct_collection[i].is_underline = false;
+                struct_collection[i].basic_formatting.make_all_false();
 
                 if whole_area_is_code_formatted {
-                    struct_collection[i].is_special_font = Some(SpecialFont::Code);
+                    struct_collection[i].is_special_font = Some(Types::SpecialFont::Code);
                 } else {
                     struct_collection[i].is_special_font = None;
                 };
             },
             "superscript" => {
                 struct_collection[i].is_special_style = None;
-                struct_collection[i].is_bold = false;
-                struct_collection[i].is_emphasised = false;
-                struct_collection[i].is_strikethrough = false;
-                struct_collection[i].is_underline = false;
+                struct_collection[i].basic_formatting.make_all_false();
 
                 if whole_area_is_superscript_formatted {
-                    struct_collection[i].is_special_font = Some(SpecialFont::Superscript);
+                    struct_collection[i].is_special_font = Some(Types::SpecialFont::Superscript);
                 } else {
                     struct_collection[i].is_special_font = None;
                 };
             },
             "subscript" => {
                 struct_collection[i].is_special_style = None;
-                struct_collection[i].is_bold = false;
-                struct_collection[i].is_emphasised = false;
-                struct_collection[i].is_strikethrough = false;
-                struct_collection[i].is_underline = false;
+                struct_collection[i].basic_formatting.make_all_false();
 
                 if whole_area_is_subscript_formatted {
-                    struct_collection[i].is_special_font = Some(SpecialFont::Subscript);
+                    struct_collection[i].is_special_font = Some(Types::SpecialFont::Subscript);
                 } else {
                     struct_collection[i].is_special_font = None;
                 };
             },
             "heading" => {
-                struct_collection[i].is_bold = false;
-                struct_collection[i].is_emphasised = false;
-                struct_collection[i].is_strikethrough = false;
-                struct_collection[i].is_underline = false;
+                struct_collection[i].basic_formatting.make_all_false();
                 struct_collection[i].is_special_font = None;
 
                 if whole_area_is_heading_formatted {
-                    struct_collection[i].is_special_style = Some(SpecialStyle::Header);
+                    struct_collection[i].is_special_style = Some(Types::SpecialStyle::Header);
                 } else {
                     struct_collection[i].is_special_style = None;
                 };
@@ -380,7 +313,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 } else {
                     None
                 };
-                struct_collection[i].list_type = Some(ListTypes::Check);
+                struct_collection[i].list_type = Some(Types::ListTypes::Check);
             },
             "ordered-list" => {
                 struct_collection[i].is_special_style = None;
@@ -389,7 +322,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 } else {
                     None
                 };
-                struct_collection[i].list_type = Some(ListTypes::Ordered);
+                struct_collection[i].list_type = Some(Types::ListTypes::Ordered);
             },
             "unordered-list" => {
                 struct_collection[i].is_special_style = None;
@@ -398,7 +331,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                 } else {
                     None
                 };
-                struct_collection[i].list_type = Some(ListTypes::Unordered);
+                struct_collection[i].list_type = Some(Types::ListTypes::Unordered);
             },
             _ => {},
         }
@@ -406,12 +339,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
 
     // println!("{:?}", struct_collection);
     // *****************  Begin final string build  ******************* //
-    is_bold = false;
-    is_emphasised = false;
-    is_strikethrough = false;
-    is_underline = false;
-    let mut is_special_style: Option<SpecialStyle> = None;
-    let mut is_special_font: Option<SpecialFont> = None;
+    basic_format.make_all_false();
+    let mut is_special_style: Option<Types::SpecialStyle> = None;
+    let mut is_special_font: Option<Types::SpecialFont> = None;
     list_type = None;
     list_item = None;
 
@@ -423,61 +353,53 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     }
 
     for char in struct_collection {
-        if !is_bold && char.is_bold {
+        if !basic_format.is_bold && char.basic_formatting.is_bold {
             write!(&mut builder, "<b>").unwrap();
-            is_bold = true;
+            basic_format.is_bold = true;
         }
-        if is_bold && !char.is_bold {
+        if basic_format.is_bold && !char.basic_formatting.is_bold {
             write!(&mut builder, "</b>").unwrap();
-            is_bold = false;
+            basic_format.is_bold = false;
         }
-        if !is_emphasised && char.is_emphasised {
+        if !basic_format.is_emphasised && char.basic_formatting.is_emphasised {
             write!(&mut builder, "<i>").unwrap();
-            is_emphasised = true;
+            basic_format.is_emphasised = true;
         }
-        if is_emphasised && !char.is_emphasised {
+        if basic_format.is_emphasised && !char.basic_formatting.is_emphasised {
             write!(&mut builder, "</i>").unwrap();
-            is_emphasised = false;
+            basic_format.is_emphasised = false;
         }
-        if !is_underline && char.is_underline {
+        if !basic_format.is_underline && char.basic_formatting.is_underline {
             write!(&mut builder, "<u>").unwrap();
-            is_underline = true;
+            basic_format.is_underline = true;
         }
-        if is_underline && !char.is_underline {
+        if basic_format.is_underline && !char.basic_formatting.is_underline {
             write!(&mut builder, "</u>").unwrap();
-            is_underline = false;
+            basic_format.is_underline = false;
         }
-       // if !is_check && char.is_check {
-       //     write!(&mut builder, "<input type=\"checkbox\">").unwrap();
-       //     is_check = true;
-       // }
-       // if is_check && !char.is_check {
-       //     write!(&mut builder, "</input>").unwrap();
-       //     is_check = false;
-       // }
-        if !is_strikethrough && char.is_strikethrough {
+        if !basic_format.is_strikethrough && char.basic_formatting.is_strikethrough {
             write!(&mut builder, "<s>").unwrap();
-            is_strikethrough = true;
+            basic_format.is_strikethrough = true;
         }
-        if is_strikethrough && !char.is_strikethrough {
+        if basic_format.is_strikethrough && !char.basic_formatting.is_strikethrough {
             write!(&mut builder, "</s>").unwrap();
-            is_strikethrough = false;
+            basic_format.is_strikethrough = false;
         }
 
         match is_special_style {
             None => {
                 match char.is_special_style {
-                    Some(SpecialStyle::Header) => {
-                        write!(&mut builder, "<h1>").unwrap();
-                        is_special_style = Some(SpecialStyle::Header);
+                    Some(Types::SpecialStyle::Header) => {
+                        write!(&mut builder, "</p><h1>").unwrap();
+                        is_special_style = Some(Types::SpecialStyle::Header);
                     },
                     None => {},
                 }
             },
-            Some(SpecialStyle::Header) => {
+            Some(Types::SpecialStyle::Header) => {
                 match char.is_special_style {
                     None => {
-                        write!(&mut builder, "</h1>").unwrap();
+                        write!(&mut builder, "</h1><p {}>", property).unwrap();
                         is_special_style = None;
                     },
                     Some(_) => {},
@@ -488,22 +410,22 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         match is_special_font {
             None => {
                 match char.is_special_font {
-                    Some(SpecialFont::Superscript) => {
+                    Some(Types::SpecialFont::Superscript) => {
                             write!(&mut builder, "<sup>").unwrap();
-                            is_special_font = Some(SpecialFont::Superscript);
+                            is_special_font = Some(Types::SpecialFont::Superscript);
                     },
-                    Some(SpecialFont::Subscript) => {
+                    Some(Types::SpecialFont::Subscript) => {
                             write!(&mut builder, "<sub>").unwrap();
-                            is_special_font = Some(SpecialFont::Subscript);
+                            is_special_font = Some(Types::SpecialFont::Subscript);
                     },
-                    Some(SpecialFont::Code) => {
+                    Some(Types::SpecialFont::Code) => {
                             write!(&mut builder, "<code>").unwrap();
-                            is_special_font = Some(SpecialFont::Code);
+                            is_special_font = Some(Types::SpecialFont::Code);
                     },
                     None => {}
                 };
             },
-            Some(SpecialFont::Superscript) => {
+            Some(Types::SpecialFont::Superscript) => {
                 match char.is_special_font {
                     None => {
                         write!(&mut builder, "</sup>").unwrap();
@@ -512,7 +434,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     Some(_) => {}
                 };
             },
-            Some(SpecialFont::Subscript) => {
+            Some(Types::SpecialFont::Subscript) => {
                 match char.is_special_font {
                     None => {
                         write!(&mut builder, "</sub>").unwrap();
@@ -521,7 +443,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     Some(_) => {}
                 };
             },
-            Some(SpecialFont::Code) => {
+            Some(Types::SpecialFont::Code) => {
                 match char.is_special_font {
                     None => {
                         write!(&mut builder, "</Code>").unwrap();
@@ -535,31 +457,31 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
         match list_type {
             None => {
                 match char.list_type {
-                    Some(ListTypes::Ordered) => {
+                    Some(Types::ListTypes::Ordered) => {
                         if char.list_item == Some(0) {
                             write!(&mut builder, "</p><ol {}><li>", property).unwrap();
-                            list_type = Some(ListTypes::Ordered);
+                            list_type = Some(Types::ListTypes::Ordered);
                             list_item = char.list_item;
                         }
                     },
-                    Some(ListTypes::Unordered) => {
+                    Some(Types::ListTypes::Unordered) => {
                         if char.list_item == Some(0) {
                             write!(&mut builder, "</p><ul {}><li>", property).unwrap();
-                            list_type = Some(ListTypes::Unordered);
+                            list_type = Some(Types::ListTypes::Unordered);
                             list_item = char.list_item;
                         }
                     },
-                    Some(ListTypes::Check) => {
+                    Some(Types::ListTypes::Check) => {
                         if char.list_item == Some(0) {
                             write!(&mut builder, "<input type=\"checkbox\">").unwrap();
-                            list_type = Some(ListTypes::Check);
+                            list_type = Some(Types::ListTypes::Check);
                             list_item = char.list_item;
                         }
                     },
                     None => {}
                 }
             },
-            Some(ListTypes::Unordered) => {
+            Some(Types::ListTypes::Unordered) => {
                 match char.list_item {
                     None => {
                         write!(&mut builder, "</li></ul><p {}>", property).unwrap();
@@ -577,7 +499,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     }
                 }
             },
-            Some(ListTypes::Ordered) => {
+            Some(Types::ListTypes::Ordered) => {
                 match char.list_item {
                     None => {
                         write!(&mut builder, "</li></ol><p {}>", property).unwrap();
@@ -595,7 +517,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
                     }
                 }
             },
-            Some(ListTypes::Check) => {
+            Some(Types::ListTypes::Check) => {
                 match char.list_item {
                     None => {
                         write!(&mut builder, "</input>").unwrap();
@@ -621,44 +543,44 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     }
 
     // Close remaining open tags
-    if is_bold {
+    if basic_format.is_bold {
         write!(&mut builder, "</b>").unwrap();
     }
-    if is_check {
-        write!(&mut builder, "</input>").unwrap();
-    }
-    if is_emphasised {
+    if basic_format.is_emphasised {
         write!(&mut builder, "</i>").unwrap();
     }
-    if is_strikethrough {
+    if basic_format.is_strikethrough {
         write!(&mut builder, "</s>").unwrap();
     }
-    if is_underline {
+    if basic_format.is_underline {
         write!(&mut builder, "</u>").unwrap();
     }
     match is_special_font {
-        Some(SpecialFont::Code) => {
+        Some(Types::SpecialFont::Code) => {
             write!(&mut builder, "</code>").unwrap();
         },
-        Some(SpecialFont::Subscript) => {
+        Some(Types::SpecialFont::Subscript) => {
             write!(&mut builder, "</sub>").unwrap();
         },
-        Some(SpecialFont::Superscript) => {
+        Some(Types::SpecialFont::Superscript) => {
             write!(&mut builder, "</sup>").unwrap();
         },
-        _ => {}
+        None => (),
     };
-    if let Some(val) = is_special_style {
+    if let Some(Types::SpecialStyle::Header) = is_special_style {
         write!(&mut builder, "</h1>").unwrap();
     };
     match list_type {
-        Some(ListTypes::Ordered) => {
+        Some(Types::ListTypes::Ordered) => {
             write!(&mut builder, "</li></ol>").unwrap();
         },
-        Some(ListTypes::Unordered) => {
+        Some(Types::ListTypes::Unordered) => {
             write!(&mut builder, "</li></ull>").unwrap();
         },
-            _ => {}
+        Some(Types::ListTypes::Check) => {
+            write!(&mut builder, "</input>").unwrap();
+        },
+        None => (),
     };
 
     // *****************  Return  ******************* //
