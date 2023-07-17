@@ -6,6 +6,8 @@ use std::fmt::Write;
 use xmlparser;
 #[path = "./types.rs"] mod Types;
 
+
+
 // Learn more about Tauri commands at https://tauri.app/v1/guides/features/command
 #[tauri::command]
 fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -> String {
@@ -34,9 +36,9 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     let mut whole_area_is_underline_formatted = true;
     let mut whole_area_is_strikethrough_formatted = true;
     let mut whole_area_is_code_formatted = true;
-    let mut whole_area_is_heading_formatted = true;
     let mut whole_area_is_superscript_formatted = true;
     let mut whole_area_is_subscript_formatted = true;
+    let mut whole_area_is_heading_formatted = true;
 
     let tokenizer = xmlparser::Tokenizer::from(html);
     for token in tokenizer {
@@ -116,7 +118,7 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
             // Matching opening token
             xmlparser::Token::ElementStart {prefix: _, local, span} => {
                 match local.as_str() {
-                    "b" => {
+                    Types::Tags::Bold.get_open_tag() => {
                         basic_format.is_bold = true;
                         is_special_style = None;
                         is_special_font = None;
@@ -345,16 +347,15 @@ fn process_styling(html: &str, begin: usize, end: usize, transformation: &str) -
     list_type = None;
     list_item = None;
 
-    let property = "contenteditable=\"true\" onKeyDown=\"keyPresshandler\"";
     let mut builder = String::new();
-    write!(&mut builder, "<p {}>", property).unwrap();
+    write!(&mut builder, "<p>").unwrap();
     if struct_collection.len() == 0 {
         write!(&mut builder, "\u{200B}").unwrap();
     }
 
     for char in struct_collection {
         if !basic_format.is_bold && char.basic_formatting.is_bold {
-            write!(&mut builder, "<b>").unwrap();
+            write!(&mut builder, Types::Tags::Bold.get_open_tag()).unwrap();
             basic_format.is_bold = true;
         }
         if basic_format.is_bold && !char.basic_formatting.is_bold {
