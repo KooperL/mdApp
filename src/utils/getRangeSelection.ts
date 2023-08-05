@@ -1,6 +1,16 @@
 import { invoke } from "@tauri-apps/api/tauri";
+import * as rangy from 'rangy';
 
-// https://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
+/**
+  * TODO: Replace the logic here with Rangy
+  * https://stackoverflow.com/questions/4811822/get-a-ranges-start-and-end-offsets-relative-to-its-parent-container
+  * https://stackoverflow.com/questions/10919680/javascript-get-range-compared-to-a-parent-element/10960441#10960441
+  * https://github.com/timdown/rangy/wiki
+  * https://stackoverflow.com/questions/21804719/get-selections-offset-relative-to-certain-parent-node
+  * https://stackoverflow.com/questions/31013025/get-range-of-selected-text-relative-to-element
+*/
+
+
 function getSelectionCharacterOffsetWithin(element: HTMLElement) {
     var start = 0;
     var end = 0;
@@ -29,7 +39,7 @@ function getSelectionCharacterOffsetWithin(element: HTMLElement) {
         preCaretTextRange.setEndPoint("EndToEnd", textRange);
         end = preCaretTextRange.text.length;
     }
-    return { start: start, end: end };
+    return { start, end };
 }
 
 // TODO: If selection length is 0, apply transformation to whole word
