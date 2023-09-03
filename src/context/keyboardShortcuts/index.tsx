@@ -7,7 +7,7 @@ interface KeyboardContextValue {
   applyChange: (id: string, newValue: string) => void;
 }
 
-export const KeyboardContext = createContext<KeyboardContextValue | undefined>(
+export const KeyboardContext = createContext<KeyboardContextValue>(
   undefined
 );
 
@@ -65,28 +65,6 @@ export const KeyboardProvider = (props: any) => {
     }
   };
 
-  // Add event listener for Control + Z and Control + Y (redo)
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.ctrlKey && event.key === 'z') {
-      event.preventDefault();
-      const currentTextArea = document.activeElement as HTMLTextAreaElement;
-      const id = currentTextArea.id;
-      undo(id);
-    } else if (event.ctrlKey && event.key === 'y') {
-      event.preventDefault();
-      const currentTextArea = document.activeElement as HTMLTextAreaElement;
-      const id = currentTextArea.id;
-      redo(id);
-    }
-  };
-
-  // Add event listener when the component mounts
-  window.addEventListener('keydown', handleKeyDown);
-
-  // Cleanup event listener when the component unmounts
-  onCleanup(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-  });
 
   return (
     <KeyboardContext.Provider value={{ undo, redo, registerTextArea, applyChange }}>
