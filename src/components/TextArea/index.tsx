@@ -1,17 +1,22 @@
-import { useContext, onCleanup, onMount } from 'solid-js';
+import { useContext, onCleanup, onMount, JSXElement } from 'solid-js';
 import { KeyboardContext } from '../../context/keyboardShortcuts';
 
 interface TextAreaProps {
   id: string;
-  initialValue: string;
+  children: JSXElement;
 }
 
-function TextArea({ id, initialValue }: TextAreaProps) {
-  const { undo, redo, registerTextArea, applyChange } = useContext(KeyboardContext);
+function TextArea({ id, children }: TextAreaProps) {
+  const context = useContext(KeyboardContext);
 
-  // Register the text area when it mounts
+  if (!context) {
+    return <></>
+  }
+
+  const { undo, redo, registerTextArea, applyChange } = context
+
   onMount(() => {
-    registerTextArea(id, initialValue);
+    registerTextArea(id, '');
   });
 
   let typingTimer: NodeJS.Timeout | null = null;
@@ -20,34 +25,27 @@ function TextArea({ id, initialValue }: TextAreaProps) {
     const textArea = event.target as HTMLTextAreaElement;
     const newValue = textArea.value;
 
-    // Clear the previous typing timer, if any
     if (typingTimer) {
       clearTimeout(typingTimer);
     }
 
-    // Set a new typing timer for 2 seconds
     typingTimer = setTimeout(() => {
-      // Apply the change to the undo/redo history after 2 seconds
       applyChange(id, newValue);
     }, 2000);
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    // Check if the spacebar key is pressed (key code 32)
-    if (event.keyCode === 32) {
+    if (event.keyCode === 32) { // Pressed space
       const textArea = event.target as HTMLTextAreaElement;
       const newValue = textArea.value;
 
-      // Clear the previous typing timer, if any
       if (typingTimer) {
         clearTimeout(typingTimer);
       }
 
-      // Apply the change to the undo/redo history when spacebar is pressed
       applyChange(id, newValue);
     }
 
-  // Add event listener for Control + Z and Control + Y (redo)
     if (event.ctrlKey && event.key === 'z') {
       event.preventDefault();
       const currentTextArea = document.activeElement as HTMLTextAreaElement;
@@ -61,23 +59,20 @@ function TextArea({ id, initialValue }: TextAreaProps) {
     }
   };
 
-  // Add event listener when the component mounts
   window.addEventListener('keydown', handleKeyDown);
 
-  // Cleanup event listener when the component unmounts
   onCleanup(() => {
     window.removeEventListener('keydown', handleKeyDown);
   });
+
   return (
-    <div>
-      <textarea
-        id={id}
-        placeholder={initialValue}
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-      />
-      <button onClick={() => undo(id)}>Undo (Ctrl + Z)</button>
-      <button onClick={() => redo(id)}>Redo (Ctrl + Y)</button>
+    <div
+      contenteditable={true}
+      id={id}
+      onInput={handleInput}
+      onKeyDown={handleKeyDown}
+    >
+      {children}
     </div>
   );
 }

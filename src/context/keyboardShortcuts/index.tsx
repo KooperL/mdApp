@@ -7,7 +7,7 @@ interface KeyboardContextValue {
   applyChange: (id: string, newValue: string) => void;
 }
 
-export const KeyboardContext = createContext<KeyboardContextValue>(
+export const KeyboardContext = createContext<KeyboardContextValue | undefined>(
   undefined
 );
 

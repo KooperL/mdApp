@@ -5,6 +5,7 @@ import { updateSelection } from "./utils/getRangeSelection";
 import { getAllChildrenInSelection } from "./utils/getAllChildrenInSelection";
 import { keyPresshandler } from "./utils/keyboardEventHandler";
 import { KeyboardProvider } from "./context/keyboardShortcuts";
+import TextArea from "./components/TextArea";
 
 
 function App() {
@@ -112,15 +113,14 @@ function App() {
             </select>
             </div>
             <div id="content-container">
-              <div
+              <TextArea
                 id={contentID}
-                contenteditable={true}
               >
                 <p 
                   contenteditable={true}
                   onKeyDown={keyPresshandler}
                 >&#8203;</p>
-              </div>
+              </TextArea>
           </div>
         </form>
       </div>
