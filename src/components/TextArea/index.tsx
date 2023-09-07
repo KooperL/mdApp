@@ -1,5 +1,5 @@
 import { useContext, onCleanup, onMount, JSXElement } from 'solid-js';
-import { KeyboardContext } from '../../context/keyboardShortcuts';
+import { useKeyboardContext } from '../../context/keyboardShortcuts';
 
 interface TextAreaProps {
   id: string;
@@ -7,12 +7,8 @@ interface TextAreaProps {
 }
 
 function TextArea({ id, children }: TextAreaProps) {
-  const context = useContext(KeyboardContext);
-
-  if (!context) {
-    return <></>
-  }
-
+  const context = useKeyboardContext();
+  if (!context) return <></>
   const { undo, redo, registerTextArea, applyChange } = context
 
   onMount(() => {
