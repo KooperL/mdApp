@@ -1,10 +1,7 @@
 import { createSignal } from "solid-js";
-import { invoke } from "@tauri-apps/api/tauri";
 import "./App.css";
 import { updateSelection } from "./utils/getRangeSelection";
-import { getAllChildrenInSelection } from "./utils/getAllChildrenInSelection";
 import { keyPresshandler } from "./utils/keyboardEventHandler";
-import { KeyboardProvider } from "./context/keyboardShortcuts";
 import TextArea from "./components/TextArea";
 
 
@@ -21,7 +18,6 @@ function App() {
 **/
 
   return (
-    <KeyboardProvider>
       <div class="container">
         <form
           class="row"
@@ -124,7 +120,6 @@ function App() {
           </div>
         </form>
       </div>
-    </KeyboardProvider>
   );
 }
 
