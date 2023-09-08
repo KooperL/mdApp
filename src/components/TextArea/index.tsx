@@ -19,8 +19,7 @@ function TextArea({ id, children }: TextAreaProps) {
 
   const handleInput = (event: InputEvent) => {
     const textArea = event.target as HTMLTextAreaElement;
-    const newValue = textArea.value;
-
+    const newValue = textArea.innerHTML;
     if (typingTimer) {
       clearTimeout(typingTimer);
     }
@@ -33,7 +32,7 @@ function TextArea({ id, children }: TextAreaProps) {
   const handleKeyDown = (event: KeyboardEvent) => {
     if (event.keyCode === 32) { // Pressed space
       const textArea = event.target as HTMLTextAreaElement;
-      const newValue = textArea.value;
+      const newValue = textArea.innerHTML;
 
       if (typingTimer) {
         clearTimeout(typingTimer);
@@ -41,7 +40,6 @@ function TextArea({ id, children }: TextAreaProps) {
 
       applyChange(id, newValue);
     }
-
     if (event.ctrlKey && event.key === 'z') {
       event.preventDefault();
       const currentTextArea = document.activeElement as HTMLTextAreaElement;
@@ -68,7 +66,10 @@ function TextArea({ id, children }: TextAreaProps) {
       onInput={handleInput}
       onKeyDown={handleKeyDown}
     >
-      {children}
+      <p 
+      >
+        &#8203;{children}
+      </p>
     </div>
   );
 }

@@ -112,10 +112,6 @@ function App() {
               <TextArea
                 id={contentID}
               >
-                <p 
-                  contenteditable={true}
-                  onKeyDown={keyPresshandler}
-                >&#8203;</p>
               </TextArea>
           </div>
         </form>

@@ -49,6 +49,7 @@ export const KeyboardProvider = (props: any) => {
           currentIndex[id] = currentIndexForId - 1;
           const previousValue = history[id][currentIndexForId - 1];
           textAreas[id][textAreas[id].length - 1] = previousValue || '';
+          document.getElementById(id)!.innerHTML = textAreas[id][currentIndex[id]]
         }
       }
     },
