@@ -1,5 +1,5 @@
 # About
-This is a text editor application with basic text formatting.
+Inspired by [xi](https://github.com/xi-editor/xi-editor), this is a text editor engine with a simple frontend application that features basic text formatting.
 It uses a Rust based backend for quick and memory safe formatting. The decision here to use Rust instead of .NET or javascript was done to the app with regards to any possible changes and updates. The frontend is written in Svelte
 Stay tuned for updates!
 
