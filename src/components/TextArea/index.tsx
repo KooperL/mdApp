@@ -1,5 +1,6 @@
 import { useContext, onCleanup, onMount, JSXElement } from 'solid-js';
 import { useKeyboardContext } from '../../context/keyboardShortcuts';
+import { handleKeyDown } from './listeners';
 
 interface TextAreaProps {
   id: string;
@@ -16,6 +17,9 @@ function TextArea({ id, children }: TextAreaProps) {
   });
 
   let typingTimer: NodeJS.Timeout | null = null;
+  const keyDownHandler = (e: KeyboardEvent) => handleKeyDown(
+    e, typingTimer, id, applyChange, undo, redo
+  )
 
   const handleInput = (event: InputEvent) => {
     const textArea = event.target as HTMLTextAreaElement;
@@ -29,34 +33,10 @@ function TextArea({ id, children }: TextAreaProps) {
     }, 2000);
   };
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.keyCode === 32) { // Pressed space
-      const textArea = event.target as HTMLTextAreaElement;
-      const newValue = textArea.innerHTML;
-
-      if (typingTimer) {
-        clearTimeout(typingTimer);
-      }
-
-      applyChange(id, newValue);
-    }
-    if (event.ctrlKey && event.key === 'z') {
-      event.preventDefault();
-      const currentTextArea = document.activeElement as HTMLTextAreaElement;
-      const id = currentTextArea.id;
-      undo(id);
-    } else if (event.ctrlKey && event.key === 'y') {
-      event.preventDefault();
-      const currentTextArea = document.activeElement as HTMLTextAreaElement;
-      const id = currentTextArea.id;
-      redo(id);
-    }
-  };
-
-  window.addEventListener('keydown', handleKeyDown);
+  window.addEventListener('keydown', keyDownHandler);
 
   onCleanup(() => {
-    window.removeEventListener('keydown', handleKeyDown);
+    window.removeEventListener('keydown', keyDownHandler);
   });
 
   return (
@@ -64,7 +44,7 @@ function TextArea({ id, children }: TextAreaProps) {
       contenteditable={true}
       id={id}
       onInput={handleInput}
-      onKeyDown={handleKeyDown}
+      onKeyDown={keyDownHandler}
     >
       <p 
       >
